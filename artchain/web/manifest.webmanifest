@@ -1,0 +1,17 @@
+{
+  "name": "ArtChain 艺术品区块链确权系统",
+  "short_name": "ArtChain",
+  "description": "把作品指纹写入区块链的艺术品确权平台——登记、比对、流转、社区，一切皆上链。",
+  "lang": "zh-CN",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f5f5f7",
+  "theme_color": "#f5f5f7",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

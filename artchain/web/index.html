@@ -1,0 +1,4152 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+<meta name="theme-color" content="#f5f5f7" id="metaThemeColor">
+<!-- PWA：可安装到手机/桌面（iOS 添加到主屏幕、Android/鸿蒙/Windows/Mac 安装应用） -->
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/icon-180.png">
+<meta name="apple-mobile-web-app-title" content="ArtChain">
+<title>ArtChain · 艺术品区块链确权系统</title>
+<style>
+  /* ============ 设计令牌：苹果风格（亮色为默认） ============
+     改这里的令牌即可整体换肤——所有组件都只引用变量，不写死颜色。
+     浅色取苹果官网基准：#f5f5f7 灰底、#0071e3 系统蓝、#1d1d1f 正文；
+     徽章色用 Apple HIG 里对比度达标的深色系，不直接用截图上那种浅系统色。 */
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-1: #1c1c1e;
+    --page: #000000;
+    --text-primary: #f5f5f7;
+    --text-secondary: #a1a1a6;
+    --text-muted: #86868b;
+    --grid: #2c2c2e;
+    --baseline: #3a3a3c;
+    --border: rgba(255,255,255,0.12);
+    --wash: rgba(255,255,255,0.05);
+    --series-1: #2997ff;
+    --series-2: #ff9f0a;
+    --series-3: #30d158;
+    --status-good: #30d158;
+    --status-warning: #ff9f0a;
+    --status-serious: #ff6961;
+    --status-critical: #ff453a;
+    --accent: #2997ff;
+    --accent-soft: rgba(41,151,255,0.12);
+    --accent-line: rgba(41,151,255,0.30);
+    --head-bg: rgba(28,28,30,0.72);
+    --seg-bg: rgba(120,120,128,0.24);
+    --ring: rgba(41,151,255,0.32);
+    --shadow-card: 0 0 0 1px rgba(255,255,255,0.06), 0 8px 24px rgba(0,0,0,0.45);
+    --shadow-float: 0 10px 40px rgba(0,0,0,0.55);
+    --shadow-hover: 0 0 0 1px rgba(255,255,255,0.08), 0 12px 32px rgba(0,0,0,0.55);
+  }
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --surface-1: #ffffff;
+    --page: #f5f5f7;
+    --text-primary: #1d1d1f;
+    --text-secondary: #6e6e73;
+    --text-muted: #86868b;
+    --grid: #e8e8ed;
+    --baseline: #d2d2d7;
+    --border: rgba(0,0,0,0.08);
+    --wash: rgba(0,0,0,0.03);
+    --series-1: #0071e3;
+    --series-2: #ff9500;
+    --series-3: #248a3d;
+    --status-good: #248a3d;
+    --status-warning: #b25000;
+    --status-serious: #c93400;
+    --status-critical: #d70015;
+    --accent: #0071e3;
+    --accent-soft: #eaf3fd;
+    --accent-line: rgba(0,113,227,0.25);
+    --head-bg: rgba(255,255,255,0.72);
+    --seg-bg: rgba(120,120,128,0.12);
+    --ring: rgba(0,113,227,0.28);
+    --shadow-card: 0 1px 2px rgba(0,0,0,0.04), 0 6px 20px rgba(0,0,0,0.05);
+    --shadow-float: 0 10px 40px rgba(0,0,0,0.18);
+    --shadow-hover: 0 2px 4px rgba(0,0,0,0.05), 0 12px 28px rgba(0,0,0,0.10);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; scrollbar-color: var(--baseline) transparent;
+         /* 手机上点按不出现灰色高亮块——苹果式点按只有元素自己的反馈 */
+         -webkit-tap-highlight-color: transparent; }
+  /* 双击缩放只在表单上需要，按钮/链接禁用；同时保留表单的自动缩放防护 */
+  button, a, input, select, textarea { touch-action: manipulation; }
+  ::selection { background: var(--ring); }
+  /* 细滚动条：滑块用令牌色，轨道透明，两种主题都融入页面 */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--baseline); border-radius: 5px;
+                              border: 2px solid var(--page); }
+  body {
+    background: var(--page); color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+                 "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI",
+                 "Microsoft YaHei", system-ui, sans-serif;
+    font-size: 14px; line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--series-1); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* 顶栏：苹果官网式的半透明毛玻璃（sticky，内容从其下滚过） */
+  header {
+    display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+    padding: 12px 24px; background: var(--head-bg);
+    -webkit-backdrop-filter: blur(20px) saturate(1.8); backdrop-filter: blur(20px) saturate(1.8);
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 20;
+  }
+  /* 品牌区：链环图标 + 中英双行，是顶栏视觉起点——splash 与登录门共用同一个 SVG
+     以保证三个界面「左上角 UI 统一」；副标题与主标题分行显示，节奏更清晰 */
+  .brand { display: flex; align-items: center; gap: 12px;
+           padding: 4px 14px 4px 4px; border-radius: 14px;
+           transition: background .18s ease; }
+  .brand:hover { background: var(--wash); }
+  .brand .logo { width: 32px; height: 26px; flex: none; display: block; }
+  .brand .logo .st1 { stop-color: var(--series-1); }
+  .brand .logo .st2 { stop-color: var(--series-3); }
+  .brand .words { display: flex; flex-direction: column; line-height: 1.15; }
+  .brand .words .name { font-size: 16px; font-weight: 600; letter-spacing: -0.01em;
+                       color: var(--text-primary); }
+  .brand .words .tag { color: var(--text-muted); font-size: 11px; margin-top: 1px;
+                      letter-spacing: 0.04em; }
+  /* 顶栏信息与品牌区之间的隐式分隔：让左侧品牌和右侧状态视觉上各成一块 */
+  .chain-meta { color: var(--text-secondary); font-size: 12.5px; margin-left: auto;
+                display: flex; gap: 14px; flex-wrap: wrap; align-items: center;
+                padding-left: 16px; border-left: 1px solid var(--border); }
+  .chain-meta b { color: var(--text-primary); font-weight: 600; }
+
+  /* 页签：iOS 分段控件——居中胶囊，选中项浮起一颗药丸 */
+  nav { display: flex; justify-content: center; gap: 2px; flex-wrap: wrap;
+        width: max-content; max-width: 92%; margin: 20px auto 4px; padding: 3px;
+        background: var(--seg-bg); border-radius: 999px; }
+  nav button {
+    background: transparent; border: 0; border-radius: 999px;
+    color: var(--text-secondary); padding: 8px 18px; font-size: 13.5px; font-weight: 500;
+    cursor: pointer; font-family: inherit;
+    transition: color .15s ease, background .2s ease, box-shadow .2s ease, transform .12s ease;
+  }
+  nav button:hover { color: var(--text-primary); }
+  nav button.active { background: var(--surface-1); color: var(--text-primary);
+                      font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,.16); }
+
+  main { padding: 10px 24px 80px; max-width: 1280px; margin: 0 auto; }
+  section { display: none; }
+  section.active { display: block; animation: fade-up .28s ease; }
+  @keyframes fade-up { from { opacity: 0; transform: translateY(6px); }
+                       to   { opacity: 1; transform: none; } }
+
+  /* 卡片：白底大圆角、去掉描边，靠极浅投影分层（深色模式另在投影里带一圈微光边） */
+  .card {
+    background: var(--surface-1); border: 0; border-radius: 18px;
+    box-shadow: var(--shadow-card);
+    padding: 22px 24px; margin-bottom: 20px;
+  }
+  .card h2 { margin: 0 0 14px; font-size: 17px; font-weight: 600; letter-spacing: -0.015em; }
+  .card h2 .hint { color: var(--text-muted); font-weight: 400; font-size: 12.5px; margin-left: 10px;
+                   letter-spacing: 0; }
+
+  /* ---------- KPI 指标卡 ---------- */
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+             gap: 16px; margin-bottom: 20px; }
+  .kpi {
+    background: var(--surface-1); border: 0; border-radius: 18px;
+    box-shadow: var(--shadow-card); padding: 18px 20px;
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .kpi:hover { transform: translateY(-2px); box-shadow: var(--shadow-hover); }
+  .kpi .label { color: var(--text-secondary); font-size: 13px; display: flex;
+                align-items: center; gap: 6px; }
+  .kpi .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .kpi .value { font-size: 38px; font-weight: 600; margin-top: 6px; line-height: 1.1;
+                letter-spacing: -0.025em; }
+  .kpi .sub { color: var(--text-muted); font-size: 12px; margin-top: 4px; }
+
+  /* ---------- 图表 ---------- */
+  .chart-wrap { position: relative; }
+  .bar { fill: var(--series-1); transition: fill .12s ease; }
+  .bar:hover { fill: var(--series-2); }
+  .axis-label { fill: var(--text-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+  .grid-line { stroke: var(--grid); stroke-width: 1; }
+  .baseline { stroke: var(--baseline); stroke-width: 1; }
+  .tooltip {
+    position: absolute; pointer-events: none; background: var(--surface-1);
+    border: 0; border-radius: 12px; padding: 8px 12px;
+    font-size: 12px; color: var(--text-primary); display: none; white-space: nowrap;
+    box-shadow: var(--shadow-float); z-index: 5;
+  }
+
+  /* ---------- 表单 ---------- */
+  .grid2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  label.field { display: block; }
+  label.field > span { display: block; color: var(--text-secondary); font-size: 12.5px; margin-bottom: 5px; }
+  input, select, textarea {
+    width: 100%; padding: 9px 12px; border-radius: 10px; font-family: inherit; font-size: 13.5px;
+    background: var(--page); color: var(--text-primary); border: 1px solid transparent;
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  input:hover:not(:focus), select:hover:not(:focus), textarea:hover:not(:focus) {
+    border-color: var(--baseline);
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none; border-color: var(--series-1); box-shadow: 0 0 0 3.5px var(--ring);
+  }
+  textarea { resize: vertical; min-height: 62px; }
+  input[type=file] { padding: 6px; }
+  .actions { display: flex; gap: 10px; align-items: center; margin-top: 16px; flex-wrap: wrap; }
+  /* 苹果式胶囊按钮：系统蓝、999px 圆角、字重 400（a.btn 用于详情区的证书/原件链接） */
+  button.btn, a.btn {
+    background: var(--series-1); color: #fff; border: 0; border-radius: 999px;
+    padding: 9px 20px; font-size: 13.5px; cursor: pointer; font-family: inherit; font-weight: 400;
+    display: inline-block; text-align: center; transition: filter .12s ease, transform .12s ease;
+  }
+  button.btn:hover, a.btn:hover { filter: brightness(1.08); text-decoration: none; }
+  button.btn:disabled { opacity: .4; cursor: not-allowed; }
+  button.btn.ghost, a.btn.ghost {
+    background: transparent; color: var(--series-1); border: 1px solid var(--baseline);
+  }
+  button.btn.ghost:hover, a.btn.ghost:hover { background: var(--wash); filter: none; }
+  button.btn.danger { background: var(--status-critical); color: #fff; }
+  /* 按压反馈：轻微回缩，模拟 iOS 按钮手感 */
+  button.btn:active:not(:disabled), a.btn:active, nav button:active,
+  .ops button.op:active:not(:disabled), button.theme-toggle:active { transform: scale(.97); }
+
+  /* ---------- 表格 ---------- */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; color: var(--text-muted); font-weight: 500; font-size: 12px;
+       padding: 8px 10px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+  td { padding: 10px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tr.clickable { transition: background .12s ease; }
+  tr.clickable:hover { background: var(--wash); cursor: pointer; }
+  .mono { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+          font-size: 11.5px; word-break: break-all; }
+  .num { font-variant-numeric: tabular-nums; }
+  .muted { color: var(--text-muted); }
+  .sec { color: var(--text-secondary); }
+
+  .badge { display: inline-flex; align-items: center; gap: 5px; font-size: 12px;
+           font-weight: 500; white-space: nowrap; }
+  .badge i { font-style: normal; font-size: 10px; }
+  .badge.good { color: var(--status-good); }
+  .badge.warning { color: var(--status-warning); }
+  .badge.critical { color: var(--status-critical); }
+  .badge.muted { color: var(--text-muted); }
+
+  /* ---------- 相似度计量条 ---------- */
+  .meter { display: flex; align-items: center; gap: 9px; min-width: 150px; }
+  .meter .track { flex: 1; height: 6px; border-radius: 3px; background: var(--grid); overflow: hidden; }
+  .meter .fill { height: 100%; border-radius: 3px; background: var(--series-1); }
+  .meter .fill.warn { background: var(--status-warning); }
+  .meter .fill.bad { background: var(--status-critical); }
+  .meter .val { font-variant-numeric: tabular-nums; font-size: 12.5px; color: var(--text-secondary);
+                min-width: 46px; text-align: right; }
+
+  .kv { display: grid; grid-template-columns: 130px 1fr; gap: 6px 14px; font-size: 13px; }
+  .kv dt { color: var(--text-muted); }
+  .kv dd { margin: 0; word-break: break-all; }
+
+  .toast {
+    position: fixed; right: 20px; bottom: 20px; max-width: 420px; z-index: 50;
+    background: var(--surface-1); border: 0; border-radius: 14px;
+    padding: 12px 16px; font-size: 13px; box-shadow: var(--shadow-float);
+    display: none; white-space: pre-wrap; animation: toast-in .25s ease;
+    align-items: flex-start; gap: 10px;
+  }
+  @keyframes toast-in { from { opacity: 0; transform: translateY(10px) scale(.98); }
+                        to   { opacity: 1; transform: none; } }
+  .toast .t-icon { width: 20px; height: 20px; border-radius: 50%; flex: none; margin-top: 1px;
+                   display: flex; align-items: center; justify-content: center;
+                   font-size: 11px; color: #fff; background: var(--series-1); }
+  .toast.ok .t-icon { background: var(--status-good); }
+  .toast.error .t-icon { background: var(--status-critical); }
+  .toast .t-body { min-width: 0; }
+  .toast h4 { margin: 0 0 4px; font-size: 13px; }
+
+  .empty { color: var(--text-muted); padding: 18px 6px; text-align: center; }
+  .preview { max-width: 260px; max-height: 260px; border-radius: 12px; border: 1px solid var(--border); }
+  .row-between { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; margin-bottom: 14px; }
+  .filters label.field { min-width: 170px; }
+  .note { color: var(--text-muted); font-size: 12.5px; margin-top: 8px; }
+
+  /* ---------- 流转操作区（转让 / 授权 / 争议 / 撤销） ---------- */
+  .ops { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+  .ops button.op {
+    background: transparent; color: var(--accent); border: 1px solid var(--accent-line);
+    border-radius: 999px; padding: 8px 16px; font-size: 13px; cursor: pointer; font-family: inherit;
+    transition: background .15s ease, color .15s ease, border-color .15s ease, transform .12s ease;
+  }
+  .ops button.op:hover:not(:disabled) { background: var(--accent-soft); }
+  .ops button.op.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .ops button.op:disabled { opacity: .35; cursor: not-allowed; }
+
+  .op-panel {
+    margin-top: 14px; padding: 18px; border-radius: 14px;
+    background: var(--accent-soft); border: 1px solid var(--accent-line);
+  }
+  .op-panel h3 { margin: 0 0 3px; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+  .op-panel .op-hint { color: var(--text-muted); font-size: 12.5px; margin: 0 0 14px; }
+  .op-panel .op-actions { display: flex; gap: 10px; align-items: center; margin-top: 14px; }
+
+  /* 需要提醒但不阻断的地方（例如"争议期间不能转让"） */
+  .callout {
+    background: var(--accent-soft); border: 1px solid var(--accent-line);
+    border-left: 3px solid var(--accent); border-radius: 12px;
+    padding: 11px 14px; font-size: 12.5px; color: var(--text-secondary); margin-top: 14px;
+  }
+
+  /* 地区横幅：购买积分区域的合规状态指示（醒目但不刺眼） */
+  .region-banner {
+    margin: 12px 0 14px; padding: 10px 14px; border-radius: 12px;
+    font-size: 13px; line-height: 1.55;
+    background: var(--wash); border: 1px solid var(--baseline);
+    color: var(--text-secondary);
+  }
+  .region-banner.cn   { background: rgba(255,159,10,.10); border-color: rgba(255,159,10,.34); color: var(--series-2); }
+  .region-banner.open { background: var(--accent-soft); border-color: var(--accent-line); color: var(--series-1); }
+  .region-banner b { color: inherit; font-weight: 600; }
+
+  /* 通道卡片网格：选中态/锁定态清晰 */
+  .rail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  @media (max-width: 640px) { .rail-grid { grid-template-columns: 1fr; } }
+  .rail-card {
+    position: relative; padding: 12px 14px; border-radius: 12px;
+    border: 1px solid var(--baseline); background: var(--surface-1);
+    cursor: pointer; transition: border-color .15s, transform .12s;
+    font-size: 13px; color: var(--text-primary);
+  }
+  .rail-card:hover { border-color: var(--series-1); }
+  .rail-card.sel { border-color: var(--series-1); box-shadow: 0 0 0 2px var(--accent-soft); }
+  .rail-card.locked { opacity: .55; cursor: not-allowed; }
+  .rail-card.locked:hover { border-color: var(--baseline); }
+  .rail-card .name { font-weight: 600; margin-bottom: 4px; }
+  .rail-card .price { color: var(--text-muted); font-size: 12px; font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
+  .rail-card .lock {
+    position: absolute; top: 8px; right: 10px; font-size: 10.5px;
+    color: var(--series-2); font-weight: 500;
+  }
+  .buy-preview { padding: 9px 12px; border-radius: 10px; background: var(--page);
+                 border: 1px solid var(--baseline); color: var(--text-primary); min-height: 38px;
+                 display: flex; align-items: center; font-size: 13.5px; }
+
+  /* 订单说明卡：指令文字醒目、对订单号突出 */
+  .order-instr {
+    margin-top: 14px; padding: 14px 16px; border-radius: 12px;
+    background: var(--accent-soft); border: 1px solid var(--accent-line);
+    border-left: 3px solid var(--accent); font-size: 13px;
+    color: var(--text-primary); line-height: 1.65;
+  }
+  .order-instr .oid { font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+                      color: var(--series-1); font-weight: 600; }
+  .order-status-chip {
+    display: inline-block; font-size: 11.5px; padding: 2px 8px; border-radius: 999px;
+    margin-left: 6px; font-weight: 500;
+  }
+  .order-status-chip.pending   { background: rgba(255,159,10,.18); color: var(--series-2); }
+  .order-status-chip.delivered { background: rgba(48,209,88,.18);  color: var(--status-good); }
+  .order-status-chip.canceled  { background: rgba(142,142,147,.20); color: var(--text-muted); }
+  .order-status-chip.expired   { background: rgba(255,69,58,.16);   color: var(--status-critical); }
+
+  /* 顶栏胶囊小按钮：主题切换与「API 文档」链接共用（a 也要吃到同一套样式） */
+  .theme-toggle {
+    background: transparent; border: 1px solid var(--baseline); border-radius: 999px;
+    color: var(--series-1); padding: 5px 14px; font-size: 12.5px;
+    cursor: pointer; font-family: inherit; text-decoration: none;
+    transition: background .15s ease, color .15s ease, transform .12s ease;
+  }
+  .theme-toggle:hover { background: var(--wash); color: var(--series-1); text-decoration: none; }
+
+  /* ---------- 登录门（支付宝式开屏：钱包即账号） ---------- */
+  body.gated { overflow: hidden; }
+  #gate {
+    position: fixed; inset: 0; z-index: 100; display: none;
+    background: var(--page); align-items: center; justify-content: center; padding: 24px;
+    overflow-y: auto;
+  }
+  #gate.on { display: flex; }
+  #gateRain { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .gate-card {
+    position: relative; width: 100%; max-width: 400px;
+    background: var(--head-bg);
+    -webkit-backdrop-filter: blur(24px) saturate(1.8); backdrop-filter: blur(24px) saturate(1.8);
+    border: 1px solid var(--border); border-radius: 22px;
+    box-shadow: var(--shadow-float); padding: 28px;
+    margin: auto;   /* 比视口高时配合外层滚动，顶部不被裁掉 */
+  }
+  .gate-brand { display: flex; flex-direction: column; align-items: center; gap: 10px;
+                font-size: 24px; font-weight: 600; letter-spacing: -0.02em; text-align: center; }
+  .gate-mark { width: 34px; height: 27px; display: block; }
+  /* 门内品牌链环的渐变端点跟主题走（SVG 属性里不能用 var()，用 CSS 上色） */
+  #ac-mark .st1 { stop-color: var(--series-1); }
+  #ac-mark .st2 { stop-color: var(--series-2); }
+  .gate-sub { color: var(--text-muted); font-size: 12px; text-align: center; margin: 6px 0 18px;
+              font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
+  .gate-tabs { display: flex; gap: 2px; padding: 3px; background: var(--seg-bg);
+               border-radius: 999px; margin-bottom: 18px; }
+  .gate-tabs button {
+    flex: 1; background: transparent; border: 0; border-radius: 999px;
+    color: var(--text-secondary); padding: 8px 0; font-size: 13.5px; font-weight: 500;
+    cursor: pointer; font-family: inherit;
+    transition: background .2s ease, color .15s ease, box-shadow .2s ease;
+  }
+  .gate-tabs button.active { background: var(--surface-1); color: var(--text-primary);
+                             font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,.16); }
+  .gate-pane { display: none; }
+  .gate-pane.active { display: block; animation: fade-up .28s ease; }
+  .gate-pane .field + .field { margin-top: 12px; }
+  .gate-btn { width: 100%; margin-top: 16px; padding: 11px 20px; font-size: 14.5px; }
+  .gate-error { color: var(--status-critical); font-size: 12.5px; margin-top: 10px; display: none; }
+  .gate-status { margin-top: 16px; text-align: center; color: var(--text-muted); font-size: 11px;
+                 font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
+
+  /* ---------- 开场动画：品牌 splash + 登录门进场 ---------- */
+  /* 门背后缓慢漂移的极光层。用 fixed 定位：不参与门内滚动，
+     短视口下也不会把滚动区域撑大。 */
+  .gate-aurora {
+    position: fixed; inset: -25%; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(38% 34% at 20% 18%, rgba(10,132,255,.14), transparent 62%),
+      radial-gradient(32% 30% at 82% 22%, rgba(255,159,10,.12), transparent 62%),
+      radial-gradient(40% 36% at 55% 88%, rgba(191,90,242,.10), transparent 64%);
+    animation: aurora-drift 16s ease-in-out infinite alternate;
+  }
+  @keyframes aurora-drift {
+    from { transform: translate3d(-3%, -2%, 0) scale(1); }
+    to   { transform: translate3d(3%, 2%, 0) scale(1.06); }
+  }
+
+  /* 开场 splash：深色品牌片头，纯 CSS 自动收场——即使脚本异常也不会把页面挡死 */
+  #splash {
+    position: fixed; inset: 0; z-index: 300; pointer-events: none;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+    background: radial-gradient(120% 90% at 50% 18%, #12121c 0%, #0a0a10 55%, #07070b 100%);
+    animation: splash-out .55s cubic-bezier(.4,0,.6,1) 1.35s forwards;
+  }
+  .splash-halo {
+    position: absolute; width: 340px; height: 340px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(10,132,255,.20), rgba(255,159,10,.07) 55%, transparent 72%);
+    animation: splash-fade-in .8s ease-out .1s backwards;
+  }
+  .splash-mark { width: 96px; height: 96px; position: relative;
+                 animation: splash-fade-in .9s cubic-bezier(.22,1,.36,1) .3s backwards; }
+  .splash-mark .ring { fill: none; stroke: url(#ac-splash); stroke-width: 5; stroke-linecap: round;
+                       stroke-dasharray: 1; stroke-dashoffset: 1; }
+  .splash-mark .ring:nth-of-type(1) { animation: ring-draw .62s ease-out .15s forwards; }
+  .splash-mark .ring:nth-of-type(2) { animation: ring-draw .62s ease-out .38s forwards; }
+  .splash-mark .ring:nth-of-type(3) { animation: ring-draw .62s ease-out .61s forwards; }
+  .splash-brand { display: flex; font-size: 31px; font-weight: 700; letter-spacing: .02em; color: #f5f5f7; }
+  .splash-brand span { display: inline-block;
+                       animation: letter-rise .5s cubic-bezier(.22,1,.36,1) backwards; }
+  .splash-brand span:nth-of-type(1) { animation-delay: .52s; }
+  .splash-brand span:nth-of-type(2) { animation-delay: .57s; }
+  .splash-brand span:nth-of-type(3) { animation-delay: .62s; }
+  .splash-brand span:nth-of-type(4) { animation-delay: .67s; }
+  .splash-brand span:nth-of-type(5) { animation-delay: .72s; }
+  .splash-brand span:nth-of-type(6) { animation-delay: .77s; }
+  .splash-brand span:nth-of-type(7) { animation-delay: .82s; }
+  .splash-brand span:nth-of-type(8) { animation-delay: .87s; }
+  .splash-sub { color: rgba(235,235,245,.42); font-size: 11px; letter-spacing: .14em;
+                font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+                animation: splash-fade-in .5s ease .98s backwards; }
+  @keyframes ring-draw { to { stroke-dashoffset: 0; } }
+  @keyframes letter-rise { from { opacity: 0; transform: translateY(14px); filter: blur(4px); } }
+  @keyframes splash-fade-in { from { opacity: 0; transform: scale(.96); } }
+  @keyframes splash-out { to { opacity: 0; visibility: hidden; transform: scale(1.05); filter: blur(8px); } }
+
+  /* 登录门进场：卡片浮起，品牌/副题/页签/状态逐级登场
+     （页签面板沿用自身 .active 的 fade-up，不受逐级动画影响） */
+  #gate.on .gate-card { animation: gate-card-in .65s cubic-bezier(.22,1,.36,1) backwards; }
+  #gate.on .gate-brand { animation: gate-rise .5s cubic-bezier(.22,1,.36,1) .10s backwards; }
+  #gate.on .gate-sub { animation: gate-rise .5s cubic-bezier(.22,1,.36,1) .18s backwards; }
+  #gate.on .gate-tabs { animation: gate-rise .5s cubic-bezier(.22,1,.36,1) .26s backwards; }
+  #gate.on .gate-status { animation: gate-rise .5s cubic-bezier(.22,1,.36,1) .50s backwards; }
+  @keyframes gate-card-in { from { opacity: 0; transform: translateY(30px) scale(.965); filter: blur(10px); } }
+  @keyframes gate-rise { from { opacity: 0; transform: translateY(10px); } }
+
+  /* 登录主按钮：主色渐变 + 光感投影 */
+  .gate-btn {
+    background: linear-gradient(135deg, var(--series-1), #0a84ff 48%, #5e5ce6);
+    box-shadow: 0 4px 14px rgba(10,132,255,.28);
+    font-weight: 600;
+  }
+  .gate-btn:hover { box-shadow: 0 6px 18px rgba(10,132,255,.34); }
+
+  /* 助记词输入格：聚焦时主色光环，序号芯片同步点亮 */
+  .mn-import .mic input:focus { border-color: var(--series-1); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .mn-import .mic:focus-within i { color: var(--series-1); }
+
+  /* 开场动画尊重系统「减弱动态效果」设置 */
+  @media (prefers-reduced-motion: reduce) {
+    #splash { display: none; }
+    #gate.on .gate-card, #gate.on .gate-brand, #gate.on .gate-sub,
+    #gate.on .gate-tabs, #gate.on .gate-status { animation: none; }
+    .gate-aurora { animation: none; }
+  }
+
+  /* 协议勾选：主流 App 的告知同意样式 */
+  .gate-consent { display: flex; align-items: flex-start; gap: 8px; margin-top: 14px;
+                  font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+  .gate-consent input { width: 14px; height: 14px; margin-top: 3px; flex: none; accent-color: var(--series-1); }
+  .gate-consent a { color: var(--series-1); }
+
+  /* 解锁页签内的模式切换：助记词 / 口令 */
+  .unlock-modes { display: flex; gap: 2px; padding: 3px; background: var(--seg-bg);
+                  border-radius: 999px; margin-bottom: 16px; }
+  .unlock-modes button { flex: 1; background: transparent; border: 0; border-radius: 999px;
+                         color: var(--text-secondary); padding: 7px 0; font-size: 13px;
+                         font-weight: 500; cursor: pointer; font-family: inherit;
+                         transition: background .2s ease, color .15s ease; }
+  .unlock-modes button.active { background: var(--surface-1); color: var(--text-primary);
+                                font-weight: 600; box-shadow: 0 1px 4px rgba(0,0,0,.16); }
+
+  /* 助记词展示层：创建钱包后一次性展示，验证抄写才能继续。
+     z-index 必须高于登录门（100）——否则登录门盖在助记词卡片上，按钮点不到。 */
+  #mnemonicOverlay { position: fixed; inset: 0; z-index: 130; display: none; align-items: center;
+                     justify-content: center; background: rgba(0,0,0,.55);
+                     -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+                     padding: 20px; overflow-y: auto; }
+  #mnemonicOverlay.on { display: flex; animation: lb-in .2s ease; }
+  /* 卡片用 margin:auto 居中：比视口高时可完整滚动（align-items:center
+     会裁掉溢出部分的顶部，矮屏上滚不到） */
+  .mn-card { background: var(--surface-1); border-radius: 22px; padding: 26px 24px;
+             max-width: 540px; width: 100%; box-shadow: var(--shadow-float); margin: auto; }
+  .mn-card h2 { margin: 0 0 6px; font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
+  .mn-card .mn-sub { color: var(--text-muted); font-size: 12.5px; margin: 0 0 14px; }
+  .mn-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+  .mn-grid .mw { background: var(--wash); border: 1px solid var(--border); border-radius: 10px;
+                 padding: 8px 10px; font-size: 12.5px; display: flex; gap: 7px; align-items: center;
+                 font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
+  .mn-grid .mw i { font-style: normal; color: var(--text-muted); font-size: 11px; min-width: 16px; }
+  .mn-warn { background: rgba(215, 0, 21, .07); border: 1px solid rgba(215, 0, 21, .25);
+             border-radius: 12px; padding: 10px 14px; font-size: 12px; color: var(--status-critical);
+             line-height: 1.65; margin-bottom: 14px; }
+  .mn-verify { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+  .mn-actions { display: flex; gap: 10px; margin-top: 16px; }
+  .mn-actions .btn { flex: 1; }
+  @media (max-width: 640px) {
+    .mn-grid { grid-template-columns: repeat(2, 1fr); }
+    .mn-verify { grid-template-columns: 1fr; }
+  }
+
+  /* 助记词导入：12 个独立输入框 + 词表联想下拉 */
+  .mn-import { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .mn-import .mic { position: relative; }
+  .mn-import .mic input {
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: 12.5px; padding: 8px 8px 8px 26px; border-radius: 10px; background: var(--page);
+  }
+  .mn-import .mic i { position: absolute; left: 8px; top: 50%; transform: translateY(-50%);
+                      font-style: normal; color: var(--text-muted); font-size: 10.5px;
+                      pointer-events: none; }
+  .mn-suggest { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 10;
+                background: var(--surface-1); border-radius: 10px;
+                box-shadow: var(--shadow-float); max-height: 170px; overflow-y: auto;
+                display: none; }
+  .mn-suggest.on { display: block; }
+  .mn-suggest button { display: block; width: 100%; text-align: left; background: transparent;
+                       border: 0; padding: 7px 12px; font-size: 12.5px; cursor: pointer;
+                       color: var(--text-primary);
+                       font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
+  .mn-suggest button:hover, .mn-suggest button.sel { background: var(--accent-soft);
+                                                     color: var(--series-1); }
+  @media (max-width: 640px) { .mn-import { grid-template-columns: repeat(2, 1fr); } }
+
+  /* 动态口令展示 */
+  .reveal-pw { font-size: 19px; letter-spacing: .14em; background: var(--wash);
+               border: 1px dashed var(--baseline); border-radius: 12px;
+               padding: 12px 16px; margin: 10px 0 6px; text-align: center;
+               user-select: all; }
+
+  /* ---------- 头像：地址哈希 → 令牌色渐变，同一地址永远同一张「脸」 ---------- */
+  .avatar { display: inline-block; flex: none; border-radius: 10px;
+            background: linear-gradient(135deg, var(--av-a, var(--series-1)),
+                                                var(--av-b, var(--series-3))); }
+
+  /* ---------- 顶栏账号 chip ---------- */
+  .account-chip { display: none; align-items: center; gap: 9px; }
+  .account-chip.on { display: inline-flex; cursor: pointer; }
+  .account-chip .avatar { width: 28px; height: 28px; border-radius: 9px; }
+  .account-chip .who { line-height: 1.3; }
+  .account-chip .who b { display: block; font-size: 13px; font-weight: 600; }
+  .account-chip .who span { color: var(--text-muted); font-size: 10.5px;
+                            font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
+  button.btn.mini { padding: 5px 14px; font-size: 12.5px; }
+
+  /* ---------- 支付宝式功能宫格 ---------- */
+  .quick-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+  .quick-item { background: transparent; border: 0; border-radius: 14px; padding: 12px 4px 10px;
+                cursor: pointer; font-family: inherit; text-align: center;
+                transition: background .15s ease, transform .12s ease; }
+  .quick-item:hover { background: var(--wash); }
+  .quick-item:active { transform: scale(.94); }
+  .quick-item .icon { width: 44px; height: 44px; margin: 0 auto 8px; border-radius: 13px;
+                      display: flex; align-items: center; justify-content: center;
+                      background: linear-gradient(135deg, var(--qi-a, var(--series-1)),
+                                                          var(--qi-b, var(--series-3))); }
+  .quick-item .name { font-size: 12.5px; color: var(--text-primary); font-weight: 500; }
+  /* 纯 CSS 几何图标：只用边框与伪元素，不引图标字体 */
+  .qi-shape { position: relative; width: 20px; height: 20px; display: block; }
+  .qi-shape::before, .qi-shape::after { content: ""; position: absolute; box-sizing: border-box; }
+  .qi-register::before { inset: 1px; border: 2px solid #fff; border-radius: 50%;
+                         border-bottom-color: transparent; }
+  .qi-register::after { inset: 6px; border: 2px solid #fff; border-radius: 50%;
+                        border-top-color: transparent; }
+  .qi-compare::before { left: 0; top: 3px; width: 12px; height: 12px;
+                        border: 2px solid #fff; border-radius: 50%; }
+  .qi-compare::after { right: 0; bottom: 3px; width: 12px; height: 12px; opacity: .65;
+                       border: 2px solid #fff; border-radius: 50%; }
+  .qi-community::before { left: 1px; top: 8px; width: 5px; height: 5px; border-radius: 50%;
+                          background: #fff; box-shadow: 7px 0 0 #fff, 14px 0 0 #fff; }
+  .qi-mine::before { left: 1px; top: 2px; width: 18px; height: 7px;
+                     border: 2px solid #fff; border-radius: 2px; }
+  .qi-mine::after { left: 1px; top: 11px; width: 18px; height: 7px; opacity: .65;
+                    border: 2px solid #fff; border-radius: 2px; }
+  .qi-verify::before { left: 2px; top: 6px; width: 11px; height: 6px;
+                       border-left: 2.5px solid #fff; border-bottom: 2.5px solid #fff;
+                       transform: rotate(-45deg); }
+  .qi-cert::before { left: 4px; top: 1px; width: 12px; height: 18px;
+                     border: 2px solid #fff; border-radius: 2px; }
+  .qi-cert::after { left: 7px; top: 5px; width: 6px; height: 2px; background: #fff;
+                    box-shadow: 0 4px 0 #fff, 0 8px 0 #fff; }
+  .qi-blocks::before { left: 1px; top: 1px; width: 11px; height: 11px;
+                       border: 2px solid #fff; border-radius: 2.5px; }
+  .qi-blocks::after { right: 1px; bottom: 1px; width: 11px; height: 11px; opacity: .6;
+                      border: 2px solid #fff; border-radius: 2.5px; }
+  .qi-coin::before { inset: 1px; border: 2px solid #fff; border-radius: 50%; }
+  .qi-coin::after { inset: 7px; background: #fff; border-radius: 50%; }
+
+  /* ---------- 社区 feed ---------- */
+  .feed { display: flex; flex-direction: column; gap: 14px; margin-top: 6px; }
+  .post { background: var(--wash); border-radius: 16px; padding: 15px 18px; }
+  .post-head { display: flex; align-items: center; gap: 10px; }
+  .post-head .avatar { width: 38px; height: 38px; border-radius: 12px; }
+  .post-head .who b { font-size: 13.5px; font-weight: 600; }
+  .post-head .who .addr { display: block; color: var(--text-muted); font-size: 10.5px;
+                          font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace; }
+  .post-head .time { margin-left: auto; color: var(--text-muted); font-size: 12px; flex: none; }
+  .post-topic { display: inline-block; color: var(--series-1); background: var(--accent-soft);
+                border-radius: 999px; padding: 1px 10px; font-size: 12px; margin-right: 6px; }
+  .post-text { margin: 10px 0 2px; white-space: pre-wrap; word-break: break-word; font-size: 14px; }
+  .post-img { display: block; max-width: 320px; max-height: 240px; border-radius: 12px;
+              border: 1px solid var(--border); margin-top: 10px; }
+  .post-meta { margin-top: 10px; color: var(--text-muted); font-size: 11px;
+               font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+               word-break: break-all; }
+  .post-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .post-actions button {
+    background: transparent; border: 1px solid var(--baseline); border-radius: 999px;
+    color: var(--text-secondary); padding: 5px 14px; font-size: 12.5px;
+    cursor: pointer; font-family: inherit;
+    transition: background .15s ease, color .15s ease, border-color .15s ease, transform .12s ease;
+  }
+  .post-actions button:hover:not(:disabled) { background: var(--surface-1); color: var(--text-primary); }
+  .post-actions button:active:not(:disabled) { transform: scale(.95); }
+  .post-actions button:disabled { opacity: .55; cursor: default; }
+  .post-actions button.liked { color: var(--status-critical); border-color: var(--status-critical); }
+  .reply-box { display: none; gap: 8px; margin-top: 10px; }
+  .reply-box.on { display: flex; }
+  .reply-box input { flex: 1; }
+  .reply-box .btn { flex: none; padding: 8px 16px; }
+  .post-detail { display: none; margin-top: 12px; border-top: 1px solid var(--grid); padding-top: 12px; }
+  .post-detail.on { display: block; }
+  .reply-item { padding: 8px 0; border-bottom: 1px solid var(--grid); font-size: 13px; }
+  .reply-item:last-child { border-bottom: 0; }
+  .filter-chip { display: none; align-items: center; gap: 6px; color: var(--series-1);
+                 background: var(--accent-soft); border: 0; border-radius: 999px;
+                 padding: 5px 14px; font-size: 12.5px; cursor: pointer; font-family: inherit; }
+  .filter-chip.on { display: inline-flex; }
+
+  /* ---------- 我的 ---------- */
+  .me-head { display: flex; align-items: center; gap: 16px; }
+  .me-head .avatar { width: 56px; height: 56px; border-radius: 17px; }
+  .me-addr { cursor: pointer; }
+  .me-addr:hover { color: var(--series-1); }
+  .foot-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 18px; }
+  .foot-item { background: var(--wash); border-radius: 14px; padding: 14px 10px; text-align: center; }
+  .foot-item .v { font-size: 26px; font-weight: 600; letter-spacing: -0.02em; }
+  .foot-item .l { color: var(--text-muted); font-size: 12px; margin-top: 2px; }
+
+  /* ---------- 新手任务卡（终端 boot-sequence 风格） ---------- */
+  #quest {
+    position: fixed; right: 20px; bottom: 20px; width: 306px; z-index: 40; display: none;
+    background: var(--surface-1); border-radius: 16px; box-shadow: var(--shadow-float);
+    padding: 14px 16px; font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: 12px;
+  }
+  #quest.on { display: block; animation: fade-up .28s ease; }
+  #quest h3 { margin: 0 0 10px; font-size: 12px; font-weight: 600; display: flex;
+              align-items: center; gap: 8px; }
+  #quest h3 .title { color: var(--text-primary); }
+  .quest-bar { height: 4px; border-radius: 2px; background: var(--grid); overflow: hidden;
+               margin-bottom: 10px; }
+  .quest-bar i { display: block; height: 100%; width: 0; background: var(--series-3);
+                 transition: width .3s ease; }
+  .quest-line { display: flex; gap: 8px; padding: 2.5px 0; color: var(--text-muted); }
+  .quest-line .tag { flex: none; }
+  .quest-line.done { color: var(--status-good); }
+  .quest-line.flash { animation: quest-flash 1.2s ease; }
+  @keyframes quest-flash { 0%, 60% { background: var(--accent-soft); } 100% { background: transparent; } }
+  .quest-skip { margin-left: auto; background: transparent; border: 0; color: var(--text-muted);
+                font-size: 11px; cursor: pointer; font-family: inherit; padding: 0; }
+  .quest-skip:hover { color: var(--text-primary); text-decoration: underline; }
+  #questBadge { display: none; cursor: pointer; color: var(--status-good); font-weight: 600; }
+  #quest.done #questBody { display: none; }
+  #quest.done #questBadge { display: block; }
+  #quest.done { width: auto; }
+
+  /* 键盘操作者的焦点环（鼠标点击不触发） */
+  button:focus-visible, a:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
+
+  /* 系统里开了「减弱动态效果」的用户，动画一律关掉 */
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
+
+  /* ============ 手机端适应 ============
+     只调布局与尺寸；颜色、圆角、投影、字体全部沿用上方设计令牌，
+     手机上与桌面端保持同一套苹果风格视觉语言。 */
+
+  @media (max-width: 900px) {
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .grid2, .grid3 { grid-template-columns: 1fr; }
+    nav { width: auto; max-width: 100%; border-radius: 22px; }
+    .quick-grid { grid-template-columns: repeat(3, 1fr); }
+    .foot-grid { grid-template-columns: repeat(2, 1fr); }
+    #quest { width: auto; left: 20px; }
+    .account-chip .who { display: none; }
+  }
+
+  @media (max-width: 640px) {
+    /* 顶栏两行化：第一行品牌 + 账号 + 按钮，链状态换到第二行整行展示 */
+    header { padding: 10px 14px; gap: 8px 12px; }
+    .brand { flex: 1; min-width: 0; font-size: 17px; }
+    .brand span { display: none; }
+    .chain-meta { order: 3; width: 100%; margin-left: 0; font-size: 11.5px; gap: 4px 14px; }
+
+    /* 页签改 iOS 可滚动分段控件：单行左右滑，滚动条隐藏，胶囊外观不变 */
+    nav { width: auto; max-width: calc(100% - 24px); margin: 14px auto 4px;
+          border-radius: 999px; flex-wrap: nowrap; justify-content: flex-start;
+          overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    nav::-webkit-scrollbar { width: 0; height: 0; display: none; }
+    nav button { flex: none; padding: 9px 15px; }
+
+    main { padding: 8px 12px 72px;
+           padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+    .card { padding: 16px 14px; border-radius: 16px; margin-bottom: 14px; }
+    .card h2 { font-size: 16px; }
+    .card h2 .hint { display: block; margin: 3px 0 0; }
+
+    /* KPI 保持两列，大号数字等比缩小 */
+    .kpi-row { gap: 10px; margin-bottom: 14px; }
+    .kpi { padding: 14px 16px; border-radius: 16px; }
+    .kpi .value { font-size: 28px; }
+
+    /* 宽表格在卡片内横向滑动；哈希列不折行，说明与时间照常换行 */
+    table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    th, td { padding: 8px; }
+    td.mono, td .mono { white-space: nowrap; word-break: normal; }
+
+    /* 表单：16px 防 iOS 聚焦时自动放大页面；触控目标加大 */
+    input, select, textarea { font-size: 16px; padding: 10px 12px; }
+    input[type="checkbox"] { width: auto; padding: 0; }
+    button.btn, a.btn { padding: 11px 22px; font-size: 14.5px; }
+    .filters { flex-direction: column; align-items: stretch; }
+    .filters label.field { min-width: 0; }
+
+    .kv { grid-template-columns: 96px 1fr; gap: 6px 10px; }
+
+    /* 提示条改 iOS 通知横幅式从顶部悬下，不与底部任务卡抢位置 */
+    .toast { top: 12px; bottom: auto; left: 12px; right: 12px; max-width: none;
+             animation-name: toast-in-top; }
+    @keyframes toast-in-top { from { opacity: 0; transform: translateY(-10px) scale(.98); }
+                              to   { opacity: 1; transform: none; } }
+
+    /* 新手任务卡贴底并适配 iPhone 底部安全区；完成后徽章缩回右下角 */
+    #quest { left: 12px; right: 12px; width: auto; bottom: 12px;
+             bottom: calc(12px + env(safe-area-inset-bottom)); }
+    #quest.done { left: auto; }
+
+    /* 社区帖子：长地址省略号截断，头像行不再撑出屏幕 */
+    .post-head .who { min-width: 0; }
+    .post-head .who .addr { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .post-head .time { font-size: 11px; }
+    .post { padding: 14px; }
+    .post-img { max-width: 100%; }
+    .preview { max-width: 100%; }
+
+    .op-panel { padding: 14px; }
+    .ops button.op { padding: 8px 14px; }
+
+    /* 登录门在窄屏收边距 */
+    #gate { padding: 16px; }
+    .gate-card { padding: 22px 18px; }
+
+    .me-head { gap: 12px; }
+    .me-head .avatar { width: 48px; height: 48px; border-radius: 15px; }
+    .foot-item .v { font-size: 22px; }
+
+    /* 移动端详情操作按钮组全宽/换行友好 */
+    .row-between .actions { width: 100%; justify-content: flex-start; }
+    .row-between .actions a.btn, .row-between .actions button.btn { flex: 1 1 auto; text-align: center; }
+  }
+
+  /* 420px 超窄屏额外优化（iPhone SE / 窄屏小手机） */
+  @media (max-width: 420px) {
+    .kpi-row { grid-template-columns: 1fr; }
+    .quick-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+    .quick-item { padding: 8px 2px 6px; }
+    .quick-item .icon { width: 40px; height: 40px; margin-bottom: 6px; }
+    .quick-item .name { font-size: 11.5px; }
+    .foot-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .kv { grid-template-columns: 80px 1fr; font-size: 12px; }
+    header { padding: 8px 10px; }
+    main { padding: 6px 8px 68px; }
+    .card { padding: 14px 12px; border-radius: 14px; }
+  }
+
+  /* 触屏没有真正的悬停：关掉点一下会「粘住」的 hover 效果 */
+  @media (hover: none) {
+    .kpi:hover { transform: none; box-shadow: var(--shadow-card); }
+    tr.clickable:hover { background: transparent; }
+    .bar:hover { fill: var(--series-1); }
+    .thumb:hover { transform: none; box-shadow: none; }
+    .art-hero:hover { box-shadow: none; }
+  }
+
+  /* ============ 图片与轻览（体验升级组件） ============
+     一个艺术品产品，界面里要能看到作品本身——缩略图贯穿作品库、
+     最近登记、比对结果；点任意图片进入全屏轻览，点任意处或 ESC 退出。 */
+  .thumb { width: 46px; height: 46px; object-fit: cover; border-radius: 10px;
+           border: 1px solid var(--border); background: var(--wash); display: block;
+           cursor: zoom-in; transition: transform .15s ease, box-shadow .15s ease; }
+  .thumb:hover { transform: scale(1.07); box-shadow: var(--shadow-hover); }
+  .thumb-cell { width: 58px; }
+  .art-hero { width: 100%; max-width: 460px; max-height: 320px; object-fit: contain;
+              border-radius: 16px; border: 1px solid var(--border); background: var(--wash);
+              display: block; cursor: zoom-in; margin-top: 16px;
+              transition: box-shadow .15s ease; }
+  .art-hero:hover { box-shadow: var(--shadow-hover); }
+  .art-row { display: flex; gap: 12px; align-items: center; min-width: 0; }
+  .art-row .art-info { min-width: 0; }
+  .art-row .art-info b { display: block; }
+  .art-row .art-info .sub { color: var(--text-muted); font-size: 12px; margin-top: 2px; }
+
+  /* 全屏轻览 */
+  #lightbox { position: fixed; inset: 0; z-index: 90; display: none; align-items: center;
+              justify-content: center; background: rgba(0,0,0,.74);
+              -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+              padding: 24px; cursor: zoom-out; animation: lb-in .2s ease; }
+  #lightbox.on { display: flex; }
+  #lightbox img { max-width: 92vw; max-height: 86vh; border-radius: 14px; cursor: default;
+                  box-shadow: 0 24px 80px rgba(0,0,0,.5);
+                  animation: lb-img .3s cubic-bezier(.2,.9,.3,1.15); }
+  #lightbox .lb-hint { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+                       color: rgba(255,255,255,.72); font-size: 12px; letter-spacing: .06em;
+                       pointer-events: none; }
+  @keyframes lb-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes lb-img { from { opacity: 0; transform: scale(.93); } to { opacity: 1; transform: none; } }
+
+  /* 骨架屏：加载时给形状而不是「正在读取」三个字 */
+  .skeleton { border-radius: 10px; background: linear-gradient(90deg, var(--wash) 25%,
+              var(--grid) 50%, var(--wash) 75%); background-size: 200% 100%;
+              animation: shimmer 1.4s ease infinite; }
+  .sk-row { display: flex; gap: 12px; align-items: center; padding: 11px 2px;
+            border-bottom: 1px solid var(--grid); }
+  .sk-row:last-child { border-bottom: 0; }
+  @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+
+  /* 新上链的卡片 / 结果卡：闪一圈主题色，然后安静下来 */
+  .flash { animation: card-flash 1.8s ease; }
+  @keyframes card-flash {
+    0%   { box-shadow: 0 0 0 2.5px var(--accent), var(--shadow-card); }
+    60%  { box-shadow: 0 0 0 2.5px var(--accent), var(--shadow-card); }
+    100% { box-shadow: var(--shadow-card); } }
+
+  /* 一键复制小按钮 */
+  .copy-btn { display: inline-flex; align-items: center; gap: 4px; background: transparent;
+              border: 1px solid var(--baseline); border-radius: 999px; color: var(--text-muted);
+              font-size: 11px; padding: 2px 9px; margin-left: 6px; cursor: pointer;
+              font-family: inherit; vertical-align: 1px;
+              transition: color .15s ease, border-color .15s ease, background .15s ease; }
+  .copy-btn:hover { color: var(--series-1); border-color: var(--series-1);
+                    background: var(--accent-soft); }
+  .copy-btn:active { transform: scale(.95); }
+
+  /* 文件选择区：iCloud 式虚线框，点击整块即选文件 */
+  .pickfile { position: relative; border: 1.5px dashed var(--baseline); border-radius: 14px;
+              overflow: hidden; cursor: pointer;
+              transition: border-color .15s ease, background .15s ease; }
+  .pickfile:hover { border-color: var(--series-1); background: var(--accent-soft); }
+  .pickfile input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer;
+                               font-size: 0; padding: 0; }
+  .pickfile-inner { padding: 16px 12px; text-align: center; pointer-events: none; }
+  .pickfile-inner b { display: block; font-size: 13.5px; color: var(--text-primary);
+                      font-weight: 500; }
+  .pickfile-inner span { color: var(--text-muted); font-size: 11.5px; }
+
+  /* 选中文件后的即时预览 */
+  .filebox { display: none; margin-top: 12px; align-items: center; gap: 14px; }
+  .filebox.on { display: flex; animation: fade-up .28s ease; }
+  .filebox img { width: 96px; height: 96px; object-fit: cover; border-radius: 12px;
+                 border: 1px solid var(--border); background: var(--wash); flex: none;
+                 cursor: zoom-in; }
+  .filebox .file-meta { min-width: 0; }
+  .filebox .file-meta b { font-size: 13.5px; word-break: break-all; display: block; }
+  .filebox .file-meta span { color: var(--text-muted); font-size: 12px; }
+
+  /* 比对结果的「原图 vs 链上作品」并排 */
+  .duel { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px; }
+  .duel .duel-box { background: var(--wash); border-radius: 14px; padding: 14px;
+                    text-align: center; min-width: 0; }
+  .duel .duel-box img { width: 100%; max-height: 230px; object-fit: contain;
+                        border-radius: 10px; background: var(--surface-1);
+                        border: 1px solid var(--border); }
+  .duel .duel-box img.zoom { cursor: zoom-in; }
+  .duel .duel-cap { color: var(--text-muted); font-size: 12px; margin-top: 8px;
+                    word-break: break-all; }
+
+  /* 首次使用的欢迎卡 */
+  .welcome { text-align: center; padding: 46px 28px !important; }
+  .welcome .welcome-icon { width: 64px; height: 64px; margin: 0 auto 20px; border-radius: 18px;
+                           background: linear-gradient(135deg, var(--series-1), var(--series-3));
+                           display: flex; align-items: center; justify-content: center;
+                           box-shadow: 0 12px 32px var(--ring); }
+  .welcome .welcome-icon i { width: 26px; height: 26px; border: 2.5px solid #fff;
+                             border-radius: 50%; border-bottom-color: transparent; display: block; }
+  .welcome h1 { margin: 0 0 10px; font-size: 26px; font-weight: 700; letter-spacing: -0.02em; }
+  .welcome p { color: var(--text-secondary); margin: 0 0 20px; font-size: 14px; line-height: 1.75; }
+  .welcome .btn-lg { padding: 13px 42px; font-size: 15.5px; }
+  .welcome details.advanced { text-align: left; max-width: 540px; margin: 26px auto 0;
+                              background: var(--wash); border-radius: 12px; padding: 10px 16px; }
+  .welcome details.advanced summary { cursor: pointer; color: var(--text-muted);
+                                      font-size: 12.5px; user-select: none; }
+  .welcome details.advanced[open] summary { margin-bottom: 12px; }
+  .welcome .welcome-note { margin-top: 18px; }
+
+  /* 空状态图形：作品库里没有作品时，给一个安静的「空画框」 */
+  .empty-art { width: 56px; height: 44px; margin: 0 auto 12px; border: 2px solid var(--baseline);
+               border-radius: 8px; position: relative; }
+  .empty-art::before { content: ""; position: absolute; inset: 5px;
+                       border: 1.5px solid var(--grid); border-radius: 4px; }
+  .empty-art::after { content: "◐"; position: absolute; right: -12px; top: -12px;
+                      font-size: 15px; color: var(--text-muted); }
+
+  /* 密码显隐：字段右侧的「显示/隐藏」小按钮 */
+  .pwd-wrap { position: relative; }
+  .pwd-wrap input { padding-right: 64px; }
+  .pwd-eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+             background: transparent; border: 0; color: var(--series-1); font-size: 12px;
+             padding: 6px 10px; cursor: pointer; font-family: inherit; border-radius: 999px;
+             transition: background .15s ease; }
+  .pwd-eye:hover { background: var(--accent-soft); }
+  .pwd-eye:active { transform: translateY(-50%) scale(.94); }
+
+  /* 点赞成功的心跳：一颗心落地时弹一下，然后安静下来 */
+  @keyframes heart-pop {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(1.28); }
+    70%  { transform: scale(.92); }
+    100% { transform: scale(1); }
+  }
+  .post-actions button.liked { animation: heart-pop .45s cubic-bezier(.2, .9, .3, 1.4); }
+
+  /* 下拉刷新指示条（社区 feed 顶部，仅触屏启用） */
+  .ptr { height: 0; overflow: hidden; text-align: center; color: var(--text-muted);
+         font-size: 12px; transition: height .16s ease; display: flex; align-items: center;
+         justify-content: center; gap: 8px; }
+  .ptr .spinner { width: 13px; height: 13px; border-radius: 50%; flex: none;
+                  border: 2px solid var(--baseline); border-top-color: var(--series-1);
+                  animation: spin .7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- 平台积分 ---------- */
+  .pts-balance { margin-top: 6px; display: flex; align-items: baseline; gap: 10px; }
+  .pts-balance .v { font-size: 52px; font-weight: 700; letter-spacing: -0.03em;
+                    font-variant-numeric: tabular-nums; }
+  .pts-balance .u { color: var(--text-muted); font-size: 15px; font-weight: 500; }
+  .pts-sub { color: var(--text-muted); font-size: 12.5px; margin-top: 6px; }
+  .pts-sub b { color: var(--text-secondary); font-weight: 600; }
+  .pts-dir-in { color: var(--status-good); }
+  .pts-dir-out { color: var(--status-warning); }
+  .pts-admin-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 640px) {
+    .pts-balance .v { font-size: 40px; }
+    .pts-admin-row { grid-template-columns: 1fr; }
+  }
+
+  /* iOS 独立应用（添加到主屏幕）：状态栏透明悬浮，头部让出安全区 */
+  header { padding-top: calc(12px + env(safe-area-inset-top, 0px)); }
+  #gate { padding-top: calc(16px + env(safe-area-inset-top, 0px)); }
+
+  /* 手机端专属：iOS 式底部标签栏（≤640px 顶部分段控件让位） */
+  .tabbar { display: none; }
+  @media (max-width: 640px) {
+    nav { display: none; }
+    .tabbar {
+      display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+      background: var(--head-bg);
+      -webkit-backdrop-filter: blur(20px) saturate(1.8); backdrop-filter: blur(20px) saturate(1.8);
+      border-top: 1px solid var(--border);
+      padding: 6px 4px calc(6px + env(safe-area-inset-bottom, 0px));
+    }
+    .tabbar button {
+      flex: 1; background: transparent; border: 0; color: var(--text-muted);
+      font-size: 10.5px; padding: 2px 0; cursor: pointer; font-family: inherit;
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+      border-radius: 12px; transition: color .15s ease;
+    }
+    .tabbar button .ti {
+      width: 24px; height: 24px; border-radius: 8px; display: flex; align-items: center;
+      justify-content: center; font-size: 11px; font-weight: 600;
+      background: var(--seg-bg); color: var(--text-secondary);
+      transition: background .2s ease, color .2s ease, box-shadow .2s ease,
+                  transform .25s cubic-bezier(.2, .9, .3, 1.4);
+    }
+    .tabbar button.active { color: var(--series-1); font-weight: 600; }
+    .tabbar button.active .ti {
+      background: linear-gradient(135deg, var(--series-1), var(--series-3));
+      color: #fff; transform: translateY(-3px) scale(1.08);
+      box-shadow: 0 4px 12px var(--ring);
+    }
+    main { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+    body { overscroll-behavior-y: none; }
+    table { -webkit-overflow-scrolling: touch; }
+  }
+
+  /* 新组件手机覆盖。必须放在所有组件基础样式之后：
+     同特异性下源码靠后的规则会压过媒体查询里的覆盖（教训：上一版放反了）。 */
+  @media (max-width: 640px) {
+    .welcome { padding: 30px 16px !important; }
+    .welcome h1 { font-size: 22px; }
+    .duel { grid-template-columns: 1fr; }
+    .art-hero { max-width: 100%; }
+    .thumb { width: 40px; height: 40px; border-radius: 9px; }
+    .thumb-cell { width: 50px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================ 开场 splash ============================
+     品牌片头：链环描边 + 字母逐级登场，约 1.35s 后纯 CSS 自动淡出。
+     纯装饰（pointer-events:none），任何情况下都不会挡住页面操作。 -->
+<div id="splash" aria-hidden="true">
+  <div class="splash-halo"></div>
+  <svg class="splash-mark" viewBox="0 0 112 88">
+    <defs>
+      <linearGradient id="ac-splash" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#0a84ff"/>
+        <stop offset="1" stop-color="#ff9f0a"/>
+      </linearGradient>
+    </defs>
+    <g>
+      <ellipse class="ring" pathLength="1" cx="40" cy="44" rx="20" ry="34" transform="rotate(24 40 44)"/>
+      <ellipse class="ring" pathLength="1" cx="56" cy="44" rx="20" ry="34" transform="rotate(0 56 44)"/>
+      <ellipse class="ring" pathLength="1" cx="72" cy="44" rx="20" ry="34" transform="rotate(-24 72 44)"/>
+    </g>
+  </svg>
+  <div class="splash-brand"><span>A</span><span>r</span><span>t</span><span>C</span><span>h</span><span>a</span><span>i</span><span>n</span></div>
+  <div class="splash-sub">identity = keypair</div>
+</div>
+
+<!-- ============================ 登录门 ============================
+     钱包即账号：没有独立用户表，能解锁钱包就是登录成功。
+     口令只进 JS 内存（state.secret），localStorage 只记钱包名用于下次预填。 -->
+<div id="gate">
+  <div class="gate-aurora" aria-hidden="true"></div>
+  <canvas id="gateRain"></canvas>
+  <div class="gate-card">
+    <div class="gate-brand">
+      <svg class="gate-mark" viewBox="0 0 112 88" aria-hidden="true">
+        <defs>
+          <linearGradient id="ac-mark" x1="0" y1="0" x2="1" y2="1">
+            <stop class="st1" offset="0"/>
+            <stop class="st2" offset="1"/>
+          </linearGradient>
+        </defs>
+        <g fill="none" stroke="url(#ac-mark)" stroke-width="7" stroke-linecap="round">
+          <ellipse cx="40" cy="44" rx="20" ry="34" transform="rotate(24 40 44)"/>
+          <ellipse cx="56" cy="44" rx="20" ry="34" transform="rotate(0 56 44)"/>
+          <ellipse cx="72" cy="44" rx="20" ry="34" transform="rotate(-24 72 44)"/>
+        </g>
+      </svg>
+      <span>ArtChain</span>
+    </div>
+    <div class="gate-sub">identity = keypair · 钱包即账号</div>
+    <div class="gate-tabs">
+      <button type="button" id="gateTabLogin" class="active">解锁钱包</button>
+      <button type="button" id="gateTabCreate">创建钱包</button>
+      <button type="button" id="gateTabImport">导入钱包</button>
+    </div>
+    <div class="gate-pane active" id="gatePaneLogin">
+      <div class="unlock-modes">
+        <button type="button" id="unlockModeMn" class="active">助记词解锁</button>
+        <button type="button" id="unlockModePwd">口令解锁</button>
+      </div>
+      <div id="unlockMnPane">
+        <label class="field"><span>助记词（12 个英文单词，输入时可联想补全）</span>
+          <div class="mn-import" id="unlockWords"></div></label>
+      </div>
+      <div id="unlockPwdPane" style="display:none">
+        <label class="field"><span>钱包</span><select id="gateWallet"></select></label>
+        <label class="field"><span>口令</span>
+          <div class="pwd-wrap">
+            <input id="gatePassword" type="password" placeholder="未加密钱包留空" autocomplete="current-password">
+            <button type="button" class="pwd-eye" data-target="gatePassword">显示</button>
+          </div>
+        </label>
+      </div>
+      <div class="gate-error" id="gateLoginError"></div>
+      <div class="gate-consent" id="gateConsentLogin" style="display:none">
+        <input type="checkbox" id="gateConsentLoginCb">
+        <span>我已阅读并同意
+          <a href="/legal/terms.html" target="_blank">《用户服务协议》</a>、
+          <a href="/legal/privacy.html" target="_blank">《隐私政策》</a>、
+          <a href="/legal/points.html" target="_blank">《平台积分规则》</a>与
+          <a href="/legal/community.html" target="_blank">《社区规范》</a></span>
+      </div>
+      <button class="btn gate-btn" id="btnGateLogin">解锁进入</button>
+    </div>
+    <div class="gate-pane" id="gatePaneCreate">
+      <label class="field"><span>钱包名称</span>
+        <input id="gateName" placeholder="例如：画家张三" autocomplete="off"></label>
+      <label class="field"><span>设置口令</span>
+        <div class="pwd-wrap">
+          <input id="gatePass1" type="password" placeholder="留空 = 不加密（仅演示）" autocomplete="new-password">
+          <button type="button" class="pwd-eye" data-target="gatePass1">显示</button>
+        </div>
+      </label>
+      <label class="field"><span>确认口令</span>
+        <div class="pwd-wrap">
+          <input id="gatePass2" type="password" autocomplete="new-password">
+          <button type="button" class="pwd-eye" data-target="gatePass2">显示</button>
+        </div>
+      </label>
+      <div class="gate-error" id="gateCreateError"></div>
+      <div class="gate-consent">
+        <input type="checkbox" id="gateConsentCreateCb">
+        <span>我已阅读并同意
+          <a href="/legal/terms.html" target="_blank">《用户服务协议》</a>、
+          <a href="/legal/privacy.html" target="_blank">《隐私政策》</a>、
+          <a href="/legal/points.html" target="_blank">《平台积分规则》</a>与
+          <a href="/legal/community.html" target="_blank">《社区规范》</a></span>
+      </div>
+      <button class="btn gate-btn" id="btnGateCreate">创建钱包并登录</button>
+    </div>
+    <div class="gate-pane" id="gatePaneImport">
+      <label class="field"><span>钱包名称</span>
+        <input id="gateImportName" placeholder="例如：画家张三" autocomplete="off"></label>
+      <label class="field"><span>助记词（按顺序输入 12 个英文单词，输入时可联想补全）</span>
+        <div class="mn-import" id="importWords"></div>
+      </label>
+      <div class="actions" style="margin-top:10px">
+        <button class="btn ghost" id="btnMnemonicUnlock">用助记词解锁已有钱包</button>
+        <button class="btn ghost" id="btnRevealPassword">查看当前口令</button>
+      </div>
+      <div class="callout" id="importReveal" style="display:none"></div>
+      <label class="field"><span>设置口令</span>
+        <div class="pwd-wrap">
+          <input id="gateImportPass" type="password" placeholder="留空 = 不加密（仅演示）" autocomplete="new-password">
+          <button type="button" class="pwd-eye" data-target="gateImportPass">显示</button>
+        </div>
+      </label>
+      <div class="gate-error" id="gateImportError"></div>
+      <div class="gate-consent">
+        <input type="checkbox" id="gateConsentImportCb">
+        <span>我已阅读并同意
+          <a href="/legal/terms.html" target="_blank">《用户服务协议》</a>、
+          <a href="/legal/privacy.html" target="_blank">《隐私政策》</a>、
+          <a href="/legal/points.html" target="_blank">《平台积分规则》</a>与
+          <a href="/legal/community.html" target="_blank">《社区规范》</a></span>
+      </div>
+      <button class="btn gate-btn" id="btnGateImport">导入并登录</button>
+    </div>
+    <div class="gate-status" id="gateStatus">connecting to node…</div>
+  </div>
+</div>
+
+<header>
+  <div class="brand" id="brandBlock">
+    <svg class="logo" viewBox="0 0 112 88" aria-hidden="true">
+      <defs><linearGradient id="brandLogo" x1="0" y1="0" x2="1" y2="1">
+        <stop class="st1" offset="0"/><stop class="st2" offset="1"/>
+      </linearGradient></defs>
+      <g fill="none" stroke="url(#brandLogo)" stroke-width="7" stroke-linecap="round">
+        <ellipse cx="40" cy="44" rx="20" ry="34" transform="rotate(24 40 44)"/>
+        <ellipse cx="56" cy="44" rx="20" ry="34" transform="rotate(0 56 44)"/>
+        <ellipse cx="72" cy="44" rx="20" ry="34" transform="rotate(-24 72 44)"/>
+      </g>
+    </svg>
+    <div class="words">
+      <span class="name">ArtChain</span>
+      <span class="tag">艺术品区块链确权系统</span>
+    </div>
+  </div>
+  <div class="chain-meta" id="chainMeta">
+    <span class="muted">正在读取链状态…</span>
+  </div>
+  <div class="account-chip" id="accountChip" title="查看我的身份与足迹">
+    <span class="avatar" id="chipAvatar"></span>
+    <span class="who"><b id="chipName">—</b><span id="chipAddr">—</span></span>
+    <button class="btn ghost mini" id="btnLogout">退出</button>
+  </div>
+  <button class="theme-toggle" id="btnTheme" title="切换浅色 / 深色">深色</button>
+</header>
+
+<nav id="nav">
+  <button data-tab="overview" class="active">概览</button>
+  <button data-tab="register">登记确权</button>
+  <button data-tab="works">作品库</button>
+  <button data-tab="compare">侵权比对</button>
+  <button data-tab="community">社区</button>
+  <button data-tab="points">积分</button>
+  <button data-tab="blocks">区块浏览</button>
+  <button data-tab="me">我的</button>
+</nav>
+
+<!-- 手机端专属：iOS 式底部标签栏（≤640px 显示，顶部胶囊导航让位） -->
+<nav class="tabbar" id="tabbar" aria-label="主导航">
+  <button data-tab="overview" class="active"><span class="ti">概</span>概览</button>
+  <button data-tab="register"><span class="ti">登</span>登记</button>
+  <button data-tab="works"><span class="ti">作</span>作品</button>
+  <button data-tab="community"><span class="ti">社</span>社区</button>
+  <button data-tab="points"><span class="ti">分</span>积分</button>
+  <button data-tab="me"><span class="ti">我</span>我的</button>
+</nav>
+
+<main>
+  <!-- ============================ 概览 ============================ -->
+  <section id="tab-overview" class="active">
+    <div id="initPanel" class="card welcome" style="display:none">
+      <div class="welcome-icon"><i></i></div>
+      <h1>欢迎来到 ArtChain</h1>
+      <p>让每一件作品都获得一份不可篡改的链上身份。<br>登记、比对、流转、社区——一切皆上链。</p>
+      <div class="actions" style="justify-content:center;margin-top:4px">
+        <button class="btn btn-lg" id="btnInit">创建区块链，开始使用</button>
+      </div>
+      <details class="advanced">
+        <summary>高级选项</summary>
+        <div class="grid3">
+          <label class="field"><span>链名称</span>
+            <input id="initName" value="ArtChain 艺术品确权链"></label>
+          <label class="field"><span>运营方</span>
+            <input id="initOperator" placeholder="例如：某某美术馆"></label>
+          <label class="field"><span>挖矿难度（1-6，越大出块越慢）</span>
+            <input id="initDifficulty" type="number" min="1" max="6" value="4"></label>
+        </div>
+      </details>
+      <p class="note welcome-note">默认设置即可开始。区块链一旦创建，链上的每一笔记录都将永久留存。</p>
+    </div>
+
+    <div id="overviewBody">
+      <!-- 支付宝式功能宫格：图标全部纯 CSS 几何图形，底色渐变走令牌色 -->
+      <div class="card">
+        <div class="quick-grid">
+          <button class="quick-item" data-act="tab:register"
+                  style="--qi-a:var(--series-1);--qi-b:var(--series-3)" title="把作品指纹写入区块链">
+            <span class="icon"><i class="qi-shape qi-register"></i></span>
+            <span class="name">登记确权</span></button>
+          <button class="quick-item" data-act="tab:compare"
+                  style="--qi-a:var(--series-2);--qi-b:var(--series-1)" title="感知指纹相似度检索">
+            <span class="icon"><i class="qi-shape qi-compare"></i></span>
+            <span class="name">侵权比对</span></button>
+          <button class="quick-item" data-act="tab:community"
+                  style="--qi-a:var(--series-3);--qi-b:var(--series-1)" title="发帖、点赞全部是签名交易">
+            <span class="icon"><i class="qi-shape qi-community"></i></span>
+            <span class="name">社区广场</span></button>
+          <button class="quick-item" data-act="fn:mine"
+                  style="--qi-a:var(--series-1);--qi-b:var(--series-2)" title="把待打包交易压进新区块">
+            <span class="icon"><i class="qi-shape qi-mine"></i></span>
+            <span class="name">打包出块</span></button>
+          <button class="quick-item" data-act="fn:verify"
+                  style="--qi-a:var(--series-3);--qi-b:var(--series-2)" title="重算全部哈希与签名">
+            <span class="icon"><i class="qi-shape qi-verify"></i></span>
+            <span class="name">校验整链</span></button>
+          <button class="quick-item" data-act="tab:me"
+                  style="--qi-a:var(--series-2);--qi-b:var(--series-3)" title="身份卡与链上足迹">
+            <span class="icon"><i class="qi-shape qi-cert"></i></span>
+            <span class="name">我的证书</span></button>
+          <button class="quick-item" data-act="tab:blocks"
+                  style="--qi-a:var(--series-1);--qi-b:var(--series-2)" title="浏览全部区块与交易">
+            <span class="icon"><i class="qi-shape qi-blocks"></i></span>
+            <span class="name">区块浏览</span></button>
+          <button class="quick-item" data-act="tab:points"
+                  style="--qi-a:var(--series-2);--qi-b:var(--series-3)" title="余额、转账与链上流水">
+            <span class="icon"><i class="qi-shape qi-coin"></i></span>
+            <span class="name">积分转账</span></button>
+        </div>
+      </div>
+
+      <div class="kpi-row" id="kpiRow"></div>
+
+      <div class="card">
+        <h2>区块交易量<span class="hint">最近若干个区块打包的确权交易数量</span></h2>
+        <div class="chart-wrap" id="chartWrap">
+          <svg id="txChart" width="100%" height="190"></svg>
+          <div class="tooltip" id="chartTip"></div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="card">
+          <h2>最新区块</h2>
+          <div id="recentBlocks"></div>
+        </div>
+        <div class="card">
+          <h2>最近登记</h2>
+          <div id="recentWorks"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================ 登记确权 ============================ -->
+  <section id="tab-register">
+    <div class="card">
+      <h2>作品登记确权<span class="hint">系统会为作品生成 SHA-256 与感知指纹并写入区块链</span></h2>
+      <div class="grid2">
+        <label class="field"><span>作品文件 *</span>
+          <div class="pickfile">
+            <input type="file" id="regFile">
+            <div class="pickfile-inner"><b>点击选择作品文件</b><span>PNG / JPG / BMP / GIF / PDF / TXT…</span></div>
+          </div>
+        </label>
+        <label class="field"><span>作品名称</span><input id="regTitle" placeholder="留空则取文件名"></label>
+        <label class="field"><span>作品类别</span><select id="regCategory"></select></label>
+        <label class="field"><span>作者署名</span><input id="regAuthor" placeholder="例如：张三"></label>
+        <label class="field"><span>创作年份</span><input id="regYear" type="number" min="1000" max="2999" placeholder="2024"></label>
+        <label class="field"><span>创作完成日期</span><input id="regCreated" type="date"></label>
+      </div>
+      <div class="filebox" id="regFilebox">
+        <img id="regFilepreview" alt="作品预览" onclick="openLightbox(this.src)">
+        <div class="file-meta"><b id="regFilename"></b><span id="regFilesize"></span></div>
+      </div>
+      <label class="field" style="margin-top:14px"><span>作品说明</span>
+        <textarea id="regDesc" placeholder="材质、尺寸、创作背景等"></textarea></label>
+
+      <div class="grid3" style="margin-top:14px">
+        <label class="field"><span>签名钱包 *</span><select id="regWallet"></select></label>
+        <label class="field"><span>钱包口令</span>
+          <div class="pwd-wrap">
+            <input id="regPassword" type="password" placeholder="未加密钱包留空">
+            <button type="button" class="pwd-eye" data-target="regPassword">显示</button>
+          </div>
+        </label>
+        <label class="field"><span>附属信息（可选）</span><input id="regMeta" placeholder="key=value，多个用逗号分隔"></label>
+      </div>
+      <div class="actions">
+        <button class="btn" id="btnRegister">登记并上链</button>
+        <label class="sec" style="display:flex;gap:6px;align-items:center">
+          <input type="checkbox" id="regStore" checked style="width:auto"> 同时在链下保存原件
+        </label>
+      </div>
+      <div class="note">提示：登记后作品指纹即写入区块，任何人改动作品都会导致指纹不匹配。</div>
+    </div>
+    <div class="card" id="registerResult" style="display:none"></div>
+  </section>
+
+  <!-- ============================ 作品库 ============================ -->
+  <section id="tab-works">
+    <div class="card">
+      <div class="filters">
+        <label class="field"><span>关键词</span><input id="workKeyword" placeholder="名称 / 作者 / 编号"></label>
+        <label class="field"><span>权利人地址</span><input id="workOwner" placeholder="ART…"></label>
+        <label class="field"><span>状态</span>
+          <select id="workStatus">
+            <option value="">全部</option><option>有效</option><option>争议中</option><option>已撤销</option><option>已无效</option>
+          </select></label>
+        <button class="btn ghost" id="btnSearchWorks">查询</button>
+      </div>
+      <div id="worksList"></div>
+    </div>
+    <div class="card" id="workDetail" style="display:none"></div>
+  </section>
+
+  <!-- ============================ 侵权比对 ============================ -->
+  <section id="tab-compare">
+    <div class="card">
+      <h2>侵权比对取证<span class="hint">用感知指纹比对，即使对方压缩、缩放、调色也能识别</span></h2>
+      <div class="grid3">
+        <label class="field"><span>待比对文件 *</span>
+          <div class="pickfile">
+            <input type="file" id="cmpFile">
+            <div class="pickfile-inner"><b>点击选择可疑文件</b><span>支持与链上作品相同的格式</span></div>
+          </div>
+        </label>
+        <label class="field"><span>只比对指定作品（可选）</span><input id="cmpWork" placeholder="WK…"></label>
+        <label class="field"><span>返回条数</span><input id="cmpTop" type="number" value="10" min="1" max="50"></label>
+      </div>
+      <div class="filebox" id="cmpFilebox">
+        <img id="cmpFilepreview" alt="待比对预览" onclick="openLightbox(this.src)">
+        <div class="file-meta"><b id="cmpFilename"></b><span id="cmpFilesize"></span></div>
+      </div>
+      <div class="actions"><button class="btn" id="btnCompare">开始比对</button></div>
+    </div>
+    <div class="card" id="compareResult" style="display:none"></div>
+  </section>
+
+  <!-- ============================ 社区（一切皆上链） ============================ -->
+  <section id="tab-community">
+    <div class="card">
+      <h2>发布帖子<span class="hint">正文全文写进区块——没有数据库，没有删帖按钮</span></h2>
+      <label class="field"><span>正文 *</span>
+        <textarea id="postText" rows="3" maxlength="2000"
+                  placeholder="说点什么…（将以当前账号签名并永久上链）"></textarea></label>
+      <div class="grid3" style="margin-top:12px">
+        <label class="field"><span>话题（可选，最多 20 字）</span>
+          <input id="postTopic" maxlength="20" placeholder="例如：确权日记"></label>
+        <label class="field"><span>附图（可选，链上只存 SHA-256）</span>
+          <input type="file" id="postImage" accept="image/*"></label>
+        <label class="field"><span>字数</span><input id="postCount" readonly value="0 / 2000"></label>
+      </div>
+      <div id="postPreviewWrap" style="display:none;margin-top:10px">
+        <img id="postPreview" class="preview" alt="附图预览"></div>
+      <div class="actions">
+        <button class="btn" id="btnPublish">签名并上链</button>
+        <span class="note" style="margin:0">签名者：<b id="publishWho">—</b></span>
+      </div>
+    </div>
+    <div class="card">
+      <div class="row-between">
+        <h2 style="margin:0">链上广场<span class="hint" id="feedTotal"></span></h2>
+        <div class="actions" style="margin:0">
+          <button class="filter-chip" id="feedFilterChip">只看我的 ✕</button>
+          <button class="btn ghost" id="btnReloadFeed">刷新</button>
+        </div>
+      </div>
+      <div class="ptr" id="ptr"><span class="spinner"></span>下拉刷新</div>
+      <div class="feed" id="feed"><div class="empty">正在读取链上帖子…</div></div>
+    </div>
+  </section>
+
+  <!-- ============================ 平台积分 ============================ -->
+  <section id="tab-points">
+    <div class="card">
+      <div class="row-between">
+        <h2 style="margin:0">我的积分<span class="hint" id="ptsWho">—</span></h2>
+        <div class="actions" style="margin:0">
+          <button class="btn ghost" id="btnPtsRefresh">刷新</button>
+        </div>
+      </div>
+      <div class="pts-balance"><span class="v" id="ptsBalance">—</span><span class="u">积分</span></div>
+      <div class="pts-sub" id="ptsSupply">正在读取链上余额…</div>
+    </div>
+
+    <div class="card">
+      <h2>转账<span class="hint">点对点划转，每一笔都是签名交易，写入区块永久留痕</span></h2>
+      <div class="grid3">
+        <label class="field"><span>收款方地址 *</span><input id="payTo" placeholder="ART…"></label>
+        <label class="field"><span>金额 *</span><input id="payAmount" placeholder="例如 12.5"></label>
+        <label class="field"><span>备注</span><input id="payMemo" placeholder="可选，将上链"></label>
+      </div>
+      <div class="actions">
+        <button class="btn" id="btnPay">签名转账</button>
+        <span class="note" style="margin:0">签名者：<b id="payWho">—</b></span>
+      </div>
+      <div class="callout" id="ptsOperatorNote" style="display:none"></div>
+    </div>
+
+    <div class="card">
+      <div class="row-between">
+        <h2 style="margin:0">购买积分<span class="hint">选定支付通道下单，付款后由运营方铸造并交付到你的钱包</span></h2>
+        <span class="hint" id="ptsRegionTag">—</span>
+      </div>
+      <div class="region-banner" id="ptsRegionBanner">正在识别你的地区…</div>
+      <div class="rail-grid" id="ptsRails"></div>
+      <div class="grid3" style="margin-top:14px">
+        <label class="field"><span>购买积分数量 *</span><input id="buyAmount" placeholder="例如 1000"></label>
+        <label class="field"><span>收款钱包地址 *</span><input id="buyAddress" placeholder="接收积分的 ArtChain 地址"></label>
+        <label class="field"><span>预计支付</span><div class="buy-preview mono" id="buyPreview">—</div></label>
+      </div>
+      <div class="actions">
+        <button class="btn" id="btnBuy">下单</button>
+        <span class="note" style="margin:0" id="buyRail">未选择通道</span>
+      </div>
+      <div id="buyOrder"></div>
+      <h3 style="margin:18px 0 8px">我的订单<span class="hint">按当前登录钱包地址过滤</span></h3>
+      <div id="ptsMyOrders"><div class="empty">尚未登录或暂无购买</div></div>
+    </div>
+
+    <div class="card" id="ptsAdminCard" style="display:none">
+      <h2>运营方：铸造与销毁</h2>
+      <div class="pts-admin-row">
+        <div class="op-panel" style="margin:0">
+          <h3>铸造积分</h3>
+          <p class="op-hint">增发计入运营方余额，再用「转账」发放给用户。</p>
+          <div class="grid2">
+            <label class="field"><span>铸造数量 *</span><input id="mintAmount" placeholder="例如 100000"></label>
+            <label class="field"><span>备注</span><input id="mintMemo" placeholder="可选，将上链"></label>
+          </div>
+          <div class="op-actions"><button class="btn" id="btnMint">铸造上链</button></div>
+        </div>
+        <div class="op-panel" style="margin:0">
+          <h3>销毁积分</h3>
+          <p class="op-hint">从运营方余额回收并缩减流通量，不可逆。</p>
+          <div class="grid2">
+            <label class="field"><span>销毁数量 *</span><input id="burnAmount" placeholder="例如 500"></label>
+            <label class="field"><span>备注</span><input id="burnMemo" placeholder="可选，将上链"></label>
+          </div>
+          <div class="op-actions"><button class="btn danger" id="btnBurn">销毁上链</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row-between">
+        <h2 style="margin:0">最近流水</h2>
+        <span class="hint" id="ptsLogTotal"></span>
+      </div>
+      <div id="ptsLog"><div class="empty">正在读取…</div></div>
+    </div>
+  </section>
+
+  <!-- ============================ 区块浏览 ============================ -->
+  <section id="tab-blocks">
+    <div class="card">
+      <div class="row-between">
+        <h2 style="margin:0">区块链浏览器</h2>
+        <div class="actions" style="margin:0">
+          <button class="btn ghost" id="btnVerifyChain">校验整条链</button>
+          <button class="btn ghost" id="btnMine">打包待处理交易</button>
+        </div>
+      </div>
+      <div id="verifyResult" class="note"></div>
+    </div>
+    <div class="card"><h2>区块列表</h2><div id="blockList"></div></div>
+    <div class="card" id="blockDetail" style="display:none"></div>
+  </section>
+
+  <!-- ============================ 我的 ============================ -->
+  <section id="tab-me">
+    <div class="card" id="meIdentity"><div class="empty">正在读取账号信息…</div></div>
+    <div class="card">
+      <h2>钱包管理<span class="hint">管理视角：私钥仅保存在服务端加密文件中，浏览器不会保存口令</span></h2>
+      <div id="walletList"></div>
+      <div class="grid3" style="margin-top:16px">
+        <label class="field"><span>新钱包名称</span><input id="newWalletName" placeholder="例如：画家张三"></label>
+        <label class="field"><span>设置口令</span>
+          <div class="pwd-wrap">
+            <input id="newWalletPass" type="password" placeholder="留空表示不加密（仅演示）">
+            <button type="button" class="pwd-eye" data-target="newWalletPass">显示</button>
+          </div>
+        </label>
+        <label class="field"><span>备注</span><input id="newWalletLabel" placeholder="机构或个人名称"></label>
+      </div>
+      <div class="actions"><button class="btn" id="btnNewWallet">创建钱包</button></div>
+    </div>
+    <div class="card">
+      <h2>节点同步<span class="hint">与其他节点交换区块，按最长链原则达成一致</span></h2>
+      <div class="grid2">
+        <label class="field"><span>节点地址</span><input id="peerUrl" placeholder="http://127.0.0.1:8001"></label>
+        <label class="field"><span>当前已知节点</span><input id="peerList" readonly></label>
+      </div>
+      <div class="actions">
+        <button class="btn" id="btnAddPeer">添加节点</button>
+        <button class="btn ghost" id="btnSync">立即同步</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>待打包交易</h2>
+      <div id="mempoolList"></div>
+    </div>
+  </section>
+</main>
+
+<!-- 新手任务卡：终端 boot-sequence 风格，完成一项打勾一项 -->
+<div id="quest">
+  <div id="questBody">
+    <h3><span class="title">&gt; 链上公民入伍测试_</span>
+        <button class="quest-skip" id="questSkip" type="button">跳过引导</button></h3>
+    <div class="quest-bar"><i id="questBarFill"></i></div>
+    <div id="questLines"></div>
+  </div>
+  <div id="questBadge" title="点击展开任务清单">★ 链上公民 · 6/6 [OK]</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- 全屏轻览：点任意缩略图进入，点任意处或按 ESC 退出 -->
+<div id="lightbox" onclick="closeLightbox()">
+  <img id="lightboxImg" alt="大图预览" onclick="event.stopPropagation()">
+  <span class="lb-hint">点击任意处关闭 · ESC</span>
+</div>
+
+<!-- 助记词展示层：创建钱包后一次性展示，抄写验证通过才能继续 -->
+<div id="mnemonicOverlay">
+  <div class="mn-card">
+    <h2>请抄写你的助记词</h2>
+    <p class="mn-sub">钱包「<b id="mnemonicName">—</b>」已创建。助记词是钱包的<b>唯一备份</b>——抄写下来，
+      任何支持 BIP39 的钱包都能用它恢复身份；平台不保存、无法找回。</p>
+    <div class="mn-grid" id="mnemonicWords"></div>
+    <div class="mn-warn">
+      任何人拿到助记词都能控制这个钱包。<b>切勿截图、切勿发送给他人、切勿存入网盘或聊天记录。</b>
+      请按顺序抄写在纸上，离线妥善保管。
+    </div>
+    <div class="actions" style="margin:0">
+      <button class="btn ghost" id="btnMnemonicCopy">复制助记词</button>
+    </div>
+    <div class="mn-verify">
+      <label class="field"><span>验证：第 <b id="mnemonicAsk1">—</b> 个单词</span>
+        <input id="mnemonicVerify1" autocomplete="off" spellcheck="false"></label>
+      <label class="field"><span>验证：第 <b id="mnemonicAsk2">—</b> 个单词</span>
+        <input id="mnemonicVerify2" autocomplete="off" spellcheck="false"></label>
+    </div>
+    <div class="mn-actions">
+      <button class="btn" id="btnMnemonicDone">我已抄写，完成验证</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+ *  ArtChain 前端：纯原生 JS，无任何第三方依赖
+ * ===================================================================== */
+const CATEGORIES = ["美术作品","摄影作品","书法作品","文字作品","设计作品","雕塑作品",
+                    "音乐作品","影视作品","数字艺术","工艺美术","其他"];
+
+const state = {
+  status: null,
+  wallets: [],
+  secret: {},        // 每个钱包的口令仅保存在内存中
+  lastWorkId: null,
+  lastCompare: null,
+  session: null,     // 当前登录账号（钱包即账号）：public_info + footprint
+  quests: null,      // 当前账号已完成的新手任务（Set）
+  feedFilter: null,  // 社区 feed 的「只看我的」过滤地址
+  cmpPreview: null,  // 比对页上传文件的预览 URL（结果卡做「原图 vs 链上作品」并排）
+  mnemonicPending: null,  // 待抄写验证的助记词 {name, password, words, pos1, pos2, autoLogin}
+  revealTimer: null,  // 动态口令倒计时定时器
+};
+
+/* ------------------------------------------------------------ 工具函数 */
+function esc(value) {
+  if (value === null || value === undefined) return "";
+  return String(value).replace(/[&<>"']/g, c => (
+    {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function short(text, n) {
+  text = String(text || "");
+  return text.length > n ? text.slice(0, n) + "…" : text;
+}
+function fmtTime(ts) {
+  if (!ts) return "—";
+  const d = new Date(ts * 1000);
+  const p = n => String(n).padStart(2, "0");
+  return d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate()) + " " +
+         p(d.getHours()) + ":" + p(d.getMinutes()) + ":" + p(d.getSeconds());
+}
+function fmtSize(bytes) {
+  if (bytes === null || bytes === undefined) return "—";
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1048576) return (bytes/1024).toFixed(1) + " KB";
+  return (bytes/1048576).toFixed(2) + " MB";
+}
+/* 积分最小单位 -> 展示文本（8 位小数，尾随 0 裁剪） */
+function pointsText(units) {
+  units = Number(units);
+  if (!Number.isFinite(units)) return "—";
+  const scale = 100000000;
+  const whole = Math.floor(units / scale);
+  let frac = units % scale;
+  if (!frac) return String(whole);
+  return whole + "." + String(frac).padStart(8, "0").replace(/0+$/, "");
+}
+/* 时间与人亲近：刚刚 / n 分钟前 / n 小时前 / 昨天 14:30 / 更早给日期。
+   表格类（审计场景）仍用 fmtTime 的完整时间戳。 */
+function fmtWhen(ts) {
+  if (!ts) return "—";
+  const d = new Date(ts * 1000);
+  const now = new Date();
+  const diff = (now.getTime() - d.getTime()) / 1000;
+  if (diff < 60) return "刚刚";
+  if (diff < 3600) return Math.floor(diff / 60) + " 分钟前";
+  if (diff < 86400 && d.getDate() === now.getDate()) {
+    return Math.floor(diff / 3600) + " 小时前";
+  }
+  const p = n => String(n).padStart(2, "0");
+  const yest = new Date(now.getTime() - 86400000);
+  if (d.getFullYear() === yest.getFullYear() && d.getMonth() === yest.getMonth() &&
+      d.getDate() === yest.getDate()) {
+    return "昨天 " + p(d.getHours()) + ":" + p(d.getMinutes());
+  }
+  return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate());
+}
+/* 作品缩略图：走服务端 /api/thumb 生成小图（移动端不再整幅下载原件）。
+   96px 恰好是 46px CSS 缩略图的 2 倍——覆盖视网膜屏；加载失败或非图片自动隐身。
+   点开放大时切回原图 URL，轻览里永远是全尺寸。 */
+function workThumb(work, cls) {
+  if (!work || !work.stored_path) return "";
+  return '<img class="' + (cls || "thumb") + '" loading="lazy" ' +
+    'src="/api/thumb/' + esc(work.work_id) + '?w=96" alt="' + esc(work.title || "作品") + '" ' +
+    'onerror="this.style.display=\'none\'" ' +
+    'onclick="event.stopPropagation();openLightbox(\'/api/blob/' + esc(work.work_id) + '\')">';
+}
+function copyText(text, label) {
+  const done = () => toast("已复制" + (label ? "：" + esc(label) : ""), "ok");
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(() => {});
+  } else {
+    prompt("手动复制：", text);
+  }
+}
+/* ---------- 全屏轻览 ---------- */
+function openLightbox(src) {
+  const box = document.getElementById("lightbox");
+  document.getElementById("lightboxImg").src = src;
+  box.classList.add("on");
+}
+function closeLightbox() {
+  document.getElementById("lightbox").classList.remove("on");
+}
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape") closeLightbox();
+});
+/* ---------- 骨架屏 ---------- */
+function skeletonRows(n, tall) {
+  let html = "";
+  for (let i = 0; i < n; i++) {
+    html += '<div class="sk-row">' +
+      (tall ? '<div class="skeleton" style="width:38px;height:38px;flex:none;border-radius:12px"></div>' : "") +
+      '<div style="flex:1;min-width:0">' +
+        '<div class="skeleton" style="height:12px;width:62%;margin-bottom:8px"></div>' +
+        '<div class="skeleton" style="height:10px;width:34%"></div></div>' +
+      '<div class="skeleton" style="width:52px;height:10px;flex:none"></div></div>';
+  }
+  return html;
+}
+/* ---------- 文件选择即时预览 ---------- */
+function bindFilePreview(inputId, boxId, imgId, nameId, sizeId) {
+  const input = document.getElementById(inputId);
+  input.addEventListener("change", () => {
+    const box = document.getElementById(boxId);
+    const file = input.files[0];
+    if (!file) { box.classList.remove("on"); return; }
+    document.getElementById(nameId).textContent = file.name;
+    document.getElementById(sizeId).textContent = fmtSize(file.size);
+    const img = document.getElementById(imgId);
+    if (file.type && file.type.startsWith("image/")) {
+      if (img._url) URL.revokeObjectURL(img._url);
+      img._url = URL.createObjectURL(file);
+      img.src = img._url;
+      img.style.display = "";
+    } else {
+      if (img._url) { URL.revokeObjectURL(img._url); img._url = null; }
+      img.style.display = "none";
+    }
+    box.classList.add("on");
+  });
+}
+function toast(message, kind) {
+  const el = document.getElementById("toast");
+  el.className = "toast " + (kind || "");
+  const glyph = kind === "ok" ? "✓" : (kind === "error" ? "!" : "i");
+  el.innerHTML = '<span class="t-icon">' + glyph + '</span><div class="t-body">' +
+    message + "</div>";
+  el.style.display = "flex";
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => { el.style.display = "none"; }, kind === "error" ? 7000 : 4200);
+}
+/* 触觉反馈：支持振动 API 的设备（安卓/鸿蒙），关键成功时刻轻轻震一下 */
+function buzz() {
+  if (navigator.vibrate) {
+    try { navigator.vibrate(24); } catch (e) { /* 忽略 */ }
+  }
+}
+function statusBadge(status) {
+  if (status === "有效") return '<span class="badge good"><i>●</i>有效</span>';
+  if (status === "争议中") return '<span class="badge warning"><i>▲</i>争议中</span>';
+  if (status === "已撤销") return '<span class="badge critical"><i>■</i>已撤销</span>';
+  if (status === "已无效") return '<span class="badge critical"><i>✕</i>已无效</span>';
+  return '<span class="badge muted">—</span>';
+}
+function levelBadge(level) {
+  const map = {5:["完全一致","critical"],4:["高度疑似","critical"],3:["疑似","warning"],
+               2:["部分相似","muted"],1:["不相似","good"]};
+  const item = map[level] || ["—","muted"];
+  return '<span class="badge ' + item[1] + '"><i>◆</i>' + item[0] + "</span>";
+}
+
+async function api(path, options) {
+  const opts = Object.assign({ headers: {} }, options || {});
+  if (opts.body && typeof opts.body !== "string") {
+    opts.headers["Content-Type"] = "application/json";
+    opts.body = JSON.stringify(opts.body);
+  }
+  const resp = await fetch(path, opts);
+  let payload;
+  try { payload = await resp.json(); }
+  catch (e) { throw new Error("服务返回了非 JSON 响应（HTTP " + resp.status + "）"); }
+  if (!payload.ok) throw new Error(payload.error || ("请求失败（HTTP " + resp.status + "）"));
+  return payload.data;
+}
+
+async function fileToBase64(file) {
+  const buf = new Uint8Array(await file.arrayBuffer());
+  let binary = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < buf.length; i += chunk) {
+    binary += String.fromCharCode.apply(null, buf.subarray(i, i + chunk));
+  }
+  return btoa(binary);
+}
+
+function withBusy(button, text, fn) {
+  const original = button.textContent;
+  button.disabled = true;
+  button.textContent = text;
+  return fn().finally(() => { button.disabled = false; button.textContent = original; });
+}
+
+/* ------------------------------------------------------------ 登录门与会话
+ * 钱包即账号：登录 = 用口令解锁钱包（POST /api/login）。
+ * 安全边界：口令只进 state.secret（内存），localStorage 只存钱包名。 */
+const ACCOUNT_KEY = "artchain-account";
+
+/* 头像配色：地址哈希 → 令牌色对。不用写死颜色，换肤自动跟随；
+ * 同一地址永远得到同一张「脸」，这是确定性的另一处体现。 */
+const AVATAR_PAIRS = [
+  ["--series-1", "--series-3"], ["--series-2", "--series-1"], ["--series-3", "--series-1"],
+  ["--series-1", "--series-2"], ["--series-2", "--series-3"], ["--series-3", "--series-2"],
+];
+function avatarStyle(address) {
+  let h = 0;
+  for (const ch of String(address || "")) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const pair = AVATAR_PAIRS[h % AVATAR_PAIRS.length];
+  return "--av-a:var(" + pair[0] + ");--av-b:var(" + pair[1] + ")";
+}
+
+function setGatePane(mode) {
+  const login = mode === "login";
+  const create = mode === "create";
+  const imp = mode === "import";
+  document.getElementById("gateTabLogin").classList.toggle("active", login);
+  document.getElementById("gateTabCreate").classList.toggle("active", create);
+  document.getElementById("gateTabImport").classList.toggle("active", imp);
+  document.getElementById("gatePaneLogin").classList.toggle("active", login);
+  document.getElementById("gatePaneCreate").classList.toggle("active", create);
+  document.getElementById("gatePaneImport").classList.toggle("active", imp);
+}
+function gateErrorBox(mode) {
+  const id = mode === "create" ? "gateCreateError"
+           : (mode === "import" ? "gateImportError" : "gateLoginError");
+  return document.getElementById(id);
+}
+function showGateError(mode, message) {
+  const box = gateErrorBox(mode);
+  box.textContent = message;
+  box.style.display = "block";
+}
+function clearGateErrors() {
+  ["gateLoginError", "gateCreateError", "gateImportError"].forEach(id => {
+    document.getElementById(id).style.display = "none";
+  });
+}
+
+/* 解锁页签的两种模式：助记词（12 格，默认）与口令（下拉 + 口令框） */
+function setUnlockMode(mode) {
+  const mn = mode === "mn";
+  state.unlockMode = mode;
+  document.getElementById("unlockModeMn").classList.toggle("active", mn);
+  document.getElementById("unlockModePwd").classList.toggle("active", !mn);
+  document.getElementById("unlockMnPane").style.display = mn ? "block" : "none";
+  document.getElementById("unlockPwdPane").style.display = mn ? "none" : "block";
+  if (mn) {
+    const first = mnInput("unlockWords", 0);
+    if (first) first.focus();
+  } else {
+    refreshLoginConsent();
+    document.getElementById("gatePassword").focus();
+  }
+}
+function showGate(mode) {
+  clearGateErrors();
+  setGatePane(mode || "login");
+  document.getElementById("gate").classList.add("on");
+  document.body.classList.add("gated");
+  startRain();
+  loadGateWallets();
+  loadGateStatus();
+  // 解锁页自动聚焦口令框：打开就能直接输入，少一次点击
+  setTimeout(() => {
+    if (document.getElementById("gatePaneLogin").classList.contains("active")) {
+      document.getElementById("gatePassword").focus();
+    }
+  }, 160);
+}
+function hideGate() {
+  document.getElementById("gate").classList.remove("on");
+  document.body.classList.remove("gated");
+}
+
+async function loadGateWallets() {
+  const select = document.getElementById("gateWallet");
+  try {
+    const data = await api("/api/wallets");
+    state.wallets = data.wallets;
+    select.innerHTML = data.wallets.map(w =>
+      '<option value="' + esc(w.name) + '">' + esc(w.name) +
+      (w.encrypted ? "（已加密）" : "（未加密）") + "</option>").join("") ||
+      '<option value="">（本节点还没有钱包）</option>';
+    // 上次登录过的账号自动预填；页签保持调用方指定的初始面板，
+    // 不再自动跳转——开始界面默认就是「导入钱包」的 12 个输入框。
+    const saved = localStorage.getItem(ACCOUNT_KEY);
+    if (data.wallets.some(w => w.name === saved)) {
+      select.value = saved;
+    }
+    refreshLoginConsent();
+  } catch (error) {
+    select.innerHTML = '<option value="">（钱包列表读取失败）</option>';
+  }
+}
+
+/* 告知同意：选中的钱包若还没有同意记录，解锁前必须勾选；勾选后服务端留痕
+ *（consents.json 记录钱包、时间与文档版本，可作为已尽告知义务的证据）。 */
+async function refreshLoginConsent() {
+  const name = document.getElementById("gateWallet").value;
+  const row = document.getElementById("gateConsentLogin");
+  if (!name) { row.style.display = "none"; return; }
+  try {
+    const data = await api("/api/consent?wallet=" + encodeURIComponent(name));
+    row.style.display = data.consented ? "none" : "flex";
+    if (!data.consented) document.getElementById("gateConsentLoginCb").checked = false;
+  } catch (error) {
+    row.style.display = "flex";   // 查询失败按「未同意」处理，安全一侧
+  }
+}
+function gateConsentNeeded() {
+  const row = document.getElementById("gateConsentLogin");
+  return row.style.display !== "none" &&
+    !document.getElementById("gateConsentLoginCb").checked;
+}
+function recordConsent(name) {
+  api("/api/consent", { method: "POST", body: { wallet: name } }).catch(() => {});
+}
+
+/* ---------- 助记词：一次性展示 + 抄写验证（主流钱包的注册流程） ---------- */
+function showMnemonic(name, password, mnemonic, autoLogin) {
+  const words = String(mnemonic || "").trim().split(/\s+/);
+  if (words.length < 12) { toast("助记词数据异常", "error"); return; }
+  const pos1 = 1 + Math.floor(Math.random() * words.length);
+  let pos2 = 1 + Math.floor(Math.random() * words.length);
+  while (pos2 === pos1) pos2 = 1 + Math.floor(Math.random() * words.length);
+  state.mnemonicPending = { name: name, password: password, words: words,
+                            pos1: pos1, pos2: pos2, autoLogin: autoLogin };
+  document.getElementById("mnemonicName").textContent = name;
+  document.getElementById("mnemonicWords").innerHTML = words.map((w, i) =>
+    '<span class="mw"><i>' + (i + 1) + '</i>' + esc(w) + "</span>").join("");
+  document.getElementById("mnemonicAsk1").textContent = pos1;
+  document.getElementById("mnemonicAsk2").textContent = pos2;
+  document.getElementById("mnemonicVerify1").value = "";
+  document.getElementById("mnemonicVerify2").value = "";
+  document.getElementById("mnemonicOverlay").classList.add("on");
+}
+
+async function confirmMnemonic() {
+  const pending = state.mnemonicPending;
+  if (!pending) return;
+  const v1 = document.getElementById("mnemonicVerify1").value.trim().toLowerCase();
+  const v2 = document.getElementById("mnemonicVerify2").value.trim().toLowerCase();
+  if (v1 !== pending.words[pending.pos1 - 1] || v2 !== pending.words[pending.pos2 - 1]) {
+    toast("<h4>验证未通过</h4>输入的单词与抄写内容不一致。若确认已抄写，请对照抄写本重新输入。",
+          "error");
+    return;
+  }
+  document.getElementById("mnemonicOverlay").classList.remove("on");
+  state.mnemonicPending = null;
+  toast("<h4>助记词验证通过</h4>请将抄写本离线妥善保管——它是钱包的唯一备份。", "ok");
+  if (pending.autoLogin) {
+    await doLogin(pending.name, pending.password);
+  }
+}
+
+/* ---------- 助记词 12 格输入（可复用组件：解锁页与导入页各一份） ----------
+   交互细节：整段粘贴自动分发到各格；输完一个词自动跳下一格；
+   退格回到上一格；输入前缀时弹出 BIP39 词表联想（懒加载一次，内存缓存）。 */
+const MNEMONIC_WORD_COUNT = 12;
+let bip39Words = null;
+
+function buildMnemonicGrid(containerId) {
+  const wrap = document.getElementById(containerId);
+  let html = "";
+  for (let i = 0; i < MNEMONIC_WORD_COUNT; i++) {
+    html += '<div class="mic" data-i="' + i + '"><i>' + (i + 1) + '</i>' +
+      '<input autocomplete="off" autocapitalize="off" autocorrect="off" ' +
+      'spellcheck="false" maxlength="24" data-i="' + i + '"></div>';
+  }
+  wrap.innerHTML = html;
+  bindMnemonicGrid(containerId);
+}
+
+function mnInput(containerId, i) {
+  return document.querySelector('#' + containerId + ' input[data-i="' + i + '"]');
+}
+
+function bindMnemonicGrid(containerId) {
+  const wrap = document.getElementById(containerId);
+
+  wrap.addEventListener("focusin", event => {
+    const input = event.target.closest("input");
+    if (input) ensureWordlist().then(() => suggest(input));
+  });
+
+  wrap.addEventListener("input", event => {
+    const input = event.target.closest("input");
+    if (!input) return;
+    const value = input.value;
+    const i = Number(input.dataset.i);
+    // 整段粘贴：自动分发到后续各格
+    const tokens = value.trim().split(/\s+/);
+    if (tokens.length > 1) {
+      distributeWords(i, tokens, containerId);
+      return;
+    }
+    // 空格结尾 = 这一个词输完了，跳下一格
+    if (value.endsWith(" ")) {
+      const word = value.trim();
+      input.value = word;
+      if (word) focusNext(i, containerId);
+      return;
+    }
+    suggest(input);
+  });
+
+  wrap.addEventListener("keydown", event => {
+    const input = event.target.closest("input");
+    if (!input) return;
+    const i = Number(input.dataset.i);
+    if (event.key === "Enter") {
+      const first = firstSuggestion(input);
+      if (first) {
+        event.preventDefault();
+        pickSuggestion(input, first, i, containerId);
+        return;
+      }
+      if (input.value.trim()) focusNext(i, containerId);
+    } else if (event.key === "Backspace" && !input.value && i > 0) {
+      mnInput(containerId, i - 1).focus();
+    } else if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      const list = ensureList(input);
+      if (list.classList.contains("on")) {
+        event.preventDefault();
+        moveSuggest(list, event.key === "ArrowDown" ? 1 : -1);
+      }
+    } else if (event.key === "Escape") {
+      closeSuggest(input);
+    }
+  });
+}
+
+function distributeWords(startIndex, tokens, containerId) {
+  const clean = tokens.map(t => t.toLowerCase()).filter(Boolean);
+  for (let k = 0; k < clean.length; k++) {
+    const idx = startIndex + k;
+    if (idx >= MNEMONIC_WORD_COUNT) break;
+    mnInput(containerId, idx).value = clean[k];
+  }
+  const next = Math.min(startIndex + clean.length, MNEMONIC_WORD_COUNT - 1);
+  mnInput(containerId, next).focus();
+  closeAllSuggest();
+}
+
+function focusNext(i, containerId) {
+  closeSuggest(mnInput(containerId, i));
+  if (i < MNEMONIC_WORD_COUNT - 1) mnInput(containerId, i + 1).focus();
+}
+
+function collectMnemonic(containerId) {
+  const words = [];
+  for (let i = 0; i < MNEMONIC_WORD_COUNT; i++) {
+    const v = (mnInput(containerId, i).value || "").trim().toLowerCase();
+    if (v) words.push(v);
+  }
+  return words.join(" ");
+}
+
+/* ---- 词表联想 ---- */
+function ensureWordlist() {
+  if (bip39Words) return Promise.resolve(bip39Words);
+  return api("/api/bip39-words").then(data => {
+    bip39Words = data.words || [];
+    return bip39Words;
+  }).catch(() => {
+    bip39Words = [];
+    return bip39Words;
+  });
+}
+
+function ensureList(input) {
+  let list = input.parentElement.querySelector(".mn-suggest");
+  if (!list) {
+    list = document.createElement("div");
+    list.className = "mn-suggest";
+    input.parentElement.appendChild(list);
+  }
+  return list;
+}
+
+function suggest(input) {
+  const value = input.value.trim().toLowerCase();
+  const list = ensureList(input);
+  if (!value || !bip39Words || !bip39Words.length) { closeSuggest(input); return; }
+  const matches = bip39Words.filter(w => w.startsWith(value)).slice(0, 6);
+  if (!matches.length || (matches.length === 1 && matches[0] === value)) {
+    closeSuggest(input);
+    return;
+  }
+  list.innerHTML = matches.map(w =>
+    '<button data-word="' + esc(w) + '">' + esc(w) + "</button>").join("");
+  list.classList.add("on");
+  list.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("mousedown", event => {
+      event.preventDefault();   // 防止抢走输入框焦点
+      pickSuggestion(input, btn.dataset.word, Number(input.dataset.i));
+    });
+  });
+}
+
+function firstSuggestion(input) {
+  const list = ensureList(input);
+  if (!list.classList.contains("on")) return null;
+  const btn = list.querySelector("button");
+  return btn ? btn.dataset.word : null;
+}
+
+function moveSuggest(list, delta) {
+  const buttons = Array.from(list.querySelectorAll("button"));
+  const sel = list.querySelector("button.sel");
+  const idx = sel ? buttons.indexOf(sel) : -1;
+  buttons.forEach(b => b.classList.remove("sel"));
+  const next = (idx + delta + buttons.length) % buttons.length;
+  buttons[next].classList.add("sel");
+  buttons[next].scrollIntoView({ block: "nearest" });
+}
+
+function pickSuggestion(input, word, i, containerId) {
+  input.value = word;
+  closeSuggest(input);
+  focusNext(i, containerId);
+}
+
+function closeSuggest(input) {
+  const list = input.parentElement.querySelector(".mn-suggest");
+  if (list) list.classList.remove("on");
+}
+function closeAllSuggest() {
+  document.querySelectorAll(".mn-suggest").forEach(l => l.classList.remove("on"));
+}
+
+async function loadGateStatus() {
+  const line = document.getElementById("gateStatus");
+  try {
+    const s = await api("/api/status");
+    line.textContent = "chain \"" + (s.chain_name || "ArtChain") + "\" · height #" + s.height +
+      " · works " + s.works_total + " · posts " + (s.posts_total || 0) +
+      " · pending " + s.pending_txs;
+  } catch (error) {
+    line.textContent = "node online · chain not initialized — log in, then create genesis block";
+  }
+}
+
+/* 背景彩蛋：缓慢飘落的十六进制字符雨。颜色实时取自 --series-1 令牌；
+ * 系统开了「减弱动态效果」就只画一帧静态的。 */
+let rainRunning = false;
+let rainBound = false;   // resize 监听只挂一次，反复登录/退出不重复绑定
+function startRain() {
+  if (rainRunning) return;
+  rainRunning = true;
+  const canvas = document.getElementById("gateRain");
+  const ctx = canvas.getContext("2d");
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const HEX = "0123456789abcdef";
+  let cols = [];
+  function resize() {
+    canvas.width = Math.max(1, canvas.offsetWidth);
+    canvas.height = Math.max(1, canvas.offsetHeight);
+    const n = Math.max(1, Math.floor(canvas.width / 24));
+    cols = Array.from({ length: n }, () => ({
+      y: Math.random() * canvas.height,
+      v: 0.25 + Math.random() * 0.55,
+      chars: Array.from({ length: 4 }, () => HEX[Math.floor(Math.random() * 16)]),
+    }));
+  }
+  function draw(animate) {
+    const gate = document.getElementById("gate");
+    if (!gate.classList.contains("on")) { rainRunning = false; return; }
+    const accent = getComputedStyle(document.documentElement)
+      .getPropertyValue("--series-1").trim() || "#0071e3";
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.font = "12px 'SF Mono', ui-monospace, Menlo, Consolas, monospace";
+    ctx.fillStyle = accent;
+    cols.forEach((col, i) => {
+      const x = i * 24 + 8;
+      for (let k = 0; k < col.chars.length; k++) {
+        const y = col.y - k * 17;
+        if (y < -14 || y > canvas.height + 14) continue;
+        ctx.globalAlpha = 0.16 - k * 0.04;
+        if (animate) col.chars[k] = Math.random() < 0.02
+          ? HEX[Math.floor(Math.random() * 16)] : col.chars[k];
+        ctx.fillText(col.chars[k], x, y);
+      }
+      if (animate) {
+        col.y += col.v;
+        if (col.y - col.chars.length * 17 > canvas.height) col.y = -20;
+      }
+    });
+    ctx.globalAlpha = 1;
+    if (animate) requestAnimationFrame(() => draw(true));
+    else rainRunning = false;
+  }
+  resize();
+  if (!rainBound) {
+    rainBound = true;
+    window.addEventListener("resize", () => {
+      if (document.getElementById("gate").classList.contains("on")) { resize(); draw(false); }
+    });
+  }
+  draw(!reduced);
+}
+
+async function doLogin(name, password) {
+  const info = await api("/api/login", { method: "POST",
+    body: { wallet: name, password: password || null } });
+  state.session = info;
+  state.secret[name] = password || state.secret[name] || "";
+  try { localStorage.setItem(ACCOUNT_KEY, name); } catch (e) { /* 隐私模式忽略 */ }
+  recordConsent(name);   // 解锁成功即视为再次确认同意（服务端幂等留痕）
+  enterApp();
+}
+
+function enterApp() {
+  hideGate();
+  renderAccountChip();
+  questInit();
+  document.getElementById("publishWho").textContent =
+    state.session.name + "（" + state.session.short_address + "）";
+  refresh().then(status => {
+    if (status) { loadWallets(); loadPeers(); }
+  });
+}
+
+function renderAccountChip() {
+  const s = state.session;
+  if (!s) return;
+  document.getElementById("chipAvatar").setAttribute("style", avatarStyle(s.address));
+  document.getElementById("chipName").textContent = s.name;
+  document.getElementById("chipAddr").textContent = s.short_address;
+  document.getElementById("accountChip").classList.add("on");
+}
+
+function logout() {
+  const name = state.session ? state.session.name : null;
+  if (name) delete state.secret[name];   // 退出即焚：内存里的口令一起清掉
+  state.session = null;
+  state.quests = null;
+  state.feedFilter = null;
+  document.getElementById("accountChip").classList.remove("on");
+  document.getElementById("quest").classList.remove("on");
+  document.getElementById("publishWho").textContent = "—";
+  showGate("login");
+}
+
+function preselectWallets() {
+  if (!state.session) return;
+  const select = document.getElementById("regWallet");
+  if (select && Array.from(select.options).some(o => o.value === state.session.name)) {
+    select.value = state.session.name;
+  }
+}
+
+function bindGate() {
+  document.getElementById("gateTabLogin").addEventListener("click", () => { clearGateErrors(); setGatePane("login"); });
+  document.getElementById("gateTabCreate").addEventListener("click", () => { clearGateErrors(); setGatePane("create"); });
+  document.getElementById("gateTabImport").addEventListener("click", () => { clearGateErrors(); setGatePane("import"); });
+  // 解锁页签内部的模式切换：助记词 12 格 / 口令
+  document.getElementById("unlockModeMn").addEventListener("click", () => { clearGateErrors(); setUnlockMode("mn"); });
+  document.getElementById("unlockModePwd").addEventListener("click", () => { clearGateErrors(); setUnlockMode("pwd"); });
+  // 切换钱包时重新检查该钱包是否已有协议同意记录
+  document.getElementById("gateWallet").addEventListener("change", refreshLoginConsent);
+
+  document.getElementById("btnGateLogin").addEventListener("click", function () {
+    if (state.unlockMode === "mn") {
+      // 助记词模式：12 词即密钥，自动匹配钱包并登录
+      const mnemonic = collectMnemonic("unlockWords");
+      const count = mnemonic ? mnemonic.split(" ").length : 0;
+      if (!mnemonic || count !== MNEMONIC_WORD_COUNT) {
+        showGateError("login", "请输入 12 个助记词单词（当前 " + count + " 个）");
+        return;
+      }
+      clearGateErrors();
+      withBusy(this, "解锁中…", async () => {
+        const info = await api("/api/login-mnemonic", { method: "POST",
+          body: { mnemonic: mnemonic } });
+        state.session = info;
+        try { localStorage.setItem(ACCOUNT_KEY, info.name); } catch (e) { /* 忽略 */ }
+        recordConsent(info.name);
+        enterApp();
+        toast("<h4>已用助记词解锁</h4>" + esc(info.name) + "（" +
+              esc(info.short_address) + "）", "ok");
+      }).catch(error => showGateError("login", error.message));
+      return;
+    }
+    const name = document.getElementById("gateWallet").value;
+    if (!name) { showGateError("login", "请先选择一个钱包（没有就创建一个）"); return; }
+    if (gateConsentNeeded()) {
+      showGateError("login", "请先阅读并勾选同意《用户服务协议》与《隐私政策》");
+      return;
+    }
+    clearGateErrors();
+    withBusy(this, "解锁中…", () =>
+      doLogin(name, document.getElementById("gatePassword").value)
+    ).catch(error => showGateError("login", error.message));
+  });
+
+  document.getElementById("btnGateCreate").addEventListener("click", function () {
+    const name = document.getElementById("gateName").value.trim();
+    const pass1 = document.getElementById("gatePass1").value;
+    const pass2 = document.getElementById("gatePass2").value;
+    if (!name) { showGateError("create", "请填写钱包名称"); return; }
+    if (pass1 !== pass2) { showGateError("create", "两次输入的口令不一致"); return; }
+    if (!document.getElementById("gateConsentCreateCb").checked) {
+      showGateError("create", "请先阅读并勾选同意《用户服务协议》与《隐私政策》");
+      return;
+    }
+    clearGateErrors();
+    withBusy(this, "生成助记词…", async () => {
+      const data = await api("/api/wallet/new", { method: "POST",
+        body: { name: name, password: pass1 || null, label: "", words: 12 } });
+      // 助记词只在这一次出现：展示 + 抄写验证，通过后自动登录
+      showMnemonic(name, pass1, data.mnemonic, true);
+    }).catch(error => showGateError("create", error.message));
+  });
+
+  document.getElementById("btnGateImport").addEventListener("click", function () {
+    const name = document.getElementById("gateImportName").value.trim();
+    const mnemonic = collectMnemonic("importWords");
+    const password = document.getElementById("gateImportPass").value;
+    if (!name) { showGateError("import", "请填写钱包名称"); return; }
+    if (!mnemonic) { showGateError("import", "请按顺序输入 12 个助记词单词"); return; }
+    if (mnemonic.split(" ").length !== MNEMONIC_WORD_COUNT) {
+      showGateError("import", "助记词应为 12 个单词，当前只输入了 " +
+        mnemonic.split(" ").length + " 个");
+      return;
+    }
+    if (!document.getElementById("gateConsentImportCb").checked) {
+      showGateError("import", "请先阅读并勾选同意《用户服务协议》与《隐私政策》");
+      return;
+    }
+    clearGateErrors();
+    withBusy(this, "导入中…", async () => {
+      await api("/api/wallet/import", { method: "POST",
+        body: { name: name, password: password || null, mnemonic: mnemonic, label: "" } });
+      await doLogin(name, password);
+      toast("<h4>钱包已恢复</h4>身份与链上足迹已随助记词找回。", "ok");
+    }).catch(error => showGateError("import", error.message));
+  });
+
+  // 助记词解锁（导入页入口）：12 词即密钥，直接登录对应钱包
+  document.getElementById("btnMnemonicUnlock").addEventListener("click", function () {
+    const mnemonic = collectMnemonic("importWords");
+    if (!mnemonic) { showGateError("import", "请先输入 12 个助记词单词"); return; }
+    if (mnemonic.split(" ").length !== MNEMONIC_WORD_COUNT) {
+      showGateError("import", "助记词应为 12 个单词，当前只输入了 " +
+        mnemonic.split(" ").length + " 个");
+      return;
+    }
+    clearGateErrors();
+    withBusy(this, "解锁中…", async () => {
+      const info = await api("/api/login-mnemonic", { method: "POST",
+        body: { mnemonic: mnemonic } });
+      state.session = info;
+      try { localStorage.setItem(ACCOUNT_KEY, info.name); } catch (e) { /* 忽略 */ }
+      recordConsent(info.name);
+      enterApp();
+      toast("<h4>已用助记词解锁</h4>" + esc(info.name) + "（" +
+        esc(info.short_address) + "）", "ok");
+    }).catch(error => showGateError("import", error.message));
+  });
+
+  // 查看当前动态口令（60 秒轮换，附倒计时与复制、一键解锁）
+  document.getElementById("btnRevealPassword").addEventListener("click", function () {
+    const mnemonic = collectMnemonic("importWords");
+    if (!mnemonic) { showGateError("import", "请先输入 12 个助记词单词"); return; }
+    clearGateErrors();
+    withBusy(this, "生成中…", async () => {
+      try {
+        const data = await api("/api/reveal-password", { method: "POST",
+          body: { mnemonic: mnemonic } });
+        renderReveal(data);
+      } catch (error) {
+        showGateError("import", error.message);
+      }
+    });
+  });
+
+  // 动态口令展示：作为 bindGate 内的嵌套函数，供「查看当前口令」按钮调用
+  function renderReveal(data) {
+  const box = document.getElementById("importReveal");
+  box.style.display = "block";
+  box.innerHTML =
+    "<b>" + esc(data.wallet) + "</b> 的当前口令（每 " + esc(data.step_seconds) +
+    " 秒自动变化）：" +
+    '<div class="reveal-pw mono" id="revealPw">' + esc(data.password) + "</div>" +
+    '<div class="note">剩余 <b id="revealCountdown">' + data.expires_in + '</b> 秒' +
+    ' <button class="copy-btn" onclick="copyText(document.getElementById(\'revealPw\').textContent, \'当前口令\')">复制</button></div>' +
+    '<div class="actions" style="margin-top:10px">' +
+    '<button class="btn ghost" id="btnRevealUnlock">用此口令解锁</button></div>';
+
+  clearInterval(state.revealTimer);
+  let left = Number(data.expires_in) || Number(data.step_seconds);
+  state.revealTimer = setInterval(() => {
+    left -= 1;
+    const el = document.getElementById("revealCountdown");
+    if (!el) { clearInterval(state.revealTimer); return; }
+    el.textContent = Math.max(0, left);
+    if (left <= 0) {
+      clearInterval(state.revealTimer);
+      box.innerHTML = '<div class="callout">口令已过期——点击上方「查看当前口令」重新生成。</div>';
+    }
+  }, 1000);
+
+  document.getElementById("btnRevealUnlock").addEventListener("click", function () {
+    withBusy(this, "解锁中…", async () => {
+      try {
+        const info = await api("/api/login", { method: "POST",
+          body: { wallet: data.wallet, password: data.password } });
+        state.session = info;
+        try { localStorage.setItem(ACCOUNT_KEY, data.wallet); } catch (e) { /* 忽略 */ }
+        recordConsent(data.wallet);
+        enterApp();
+      } catch (error) {
+        box.innerHTML = '<div class="callout">' + esc(error.message) +
+          "——口令可能已轮换，请重新「查看当前口令」。</div>";
+      }
+    });
+  });
+}
+
+  ["gatePassword", "gateName", "gatePass1", "gatePass2", "gateImportPass"].forEach(id => {
+    document.getElementById(id).addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        // 口令框回车 = 解锁；创建页三个框回车 = 创建；导入页口令框回车 = 导入
+        const target = id === "gatePassword" ? "btnGateLogin"
+          : (id === "gateImportPass" ? "btnGateImport" : "btnGateCreate");
+        document.getElementById(target).click();
+      }
+    });
+  });
+
+  // 助记词展示层：复制 + 抄写验证
+  document.getElementById("btnMnemonicCopy").addEventListener("click", () => {
+    const pending = state.mnemonicPending;
+    if (!pending) return;
+    copyText(pending.words.join(" "), "助记词");
+  });
+  document.getElementById("btnMnemonicDone").addEventListener("click", confirmMnemonic);
+
+  document.getElementById("btnLogout").addEventListener("click", logout);
+
+  // 点顶栏账号 chip（头像/名字）直达「我的」；退出按钮除外
+  document.getElementById("accountChip").addEventListener("click", event => {
+    if (event.target.closest("button")) return;
+    switchTab("me");
+  });
+
+  // 宫格：tab:xxx 跳页签；fn:xxx 触发既有动作按钮
+  document.querySelectorAll(".quick-item").forEach(item => {
+    item.addEventListener("click", () => {
+      const [kind, target] = item.dataset.act.split(":");
+      if (kind === "tab") { switchTab(target); return; }
+      if (target === "verify") switchTab("blocks");
+      document.getElementById(target === "mine" ? "btnMine" : "btnVerifyChain").click();
+    });
+  });
+}
+
+/* ------------------------------------------------------------ 标签切换
+ * 桌面是顶部胶囊导航，手机是底部标签栏——两套入口共用同一套激活逻辑。 */
+function activateTab(tab) {
+  document.querySelectorAll("nav button").forEach(b =>
+    b.classList.toggle("active", b.dataset.tab === tab));
+  document.querySelectorAll(".tabbar button").forEach(b =>
+    b.classList.toggle("active", b.dataset.tab === tab));
+  document.querySelectorAll("section").forEach(s => s.classList.remove("active"));
+  document.getElementById("tab-" + tab).classList.add("active");
+  if (tab === "works") loadWorks();
+  if (tab === "blocks") loadBlocks();
+  if (tab === "community") loadPosts();
+  if (tab === "points") loadPoints();
+  if (tab === "me") { renderMe(); loadWallets(); loadPeers(); loadMempool(); }
+  if (tab === "overview") refresh();
+}
+document.getElementById("nav").addEventListener("click", event => {
+  const button = event.target.closest("button[data-tab]");
+  if (button) activateTab(button.dataset.tab);
+});
+document.getElementById("tabbar").addEventListener("click", event => {
+  const button = event.target.closest("button[data-tab]");
+  if (button) activateTab(button.dataset.tab);
+});
+
+/* 密码显隐：事件委托统一处理所有「显示/隐藏」小按钮 */
+document.addEventListener("click", event => {
+  const eye = event.target.closest(".pwd-eye");
+  if (!eye) return;
+  const input = document.getElementById(eye.dataset.target);
+  if (!input) return;
+  const show = input.type === "password";
+  input.type = show ? "text" : "password";
+  eye.textContent = show ? "隐藏" : "显示";
+  input.focus();
+});
+
+// 点击助记词输入框之外时收起联想下拉
+document.addEventListener("click", event => {
+  if (!event.target.closest(".mic")) closeAllSuggest();
+});
+
+/* ------------------------------------------------------------ 概览 */
+async function refresh() {
+  try {
+    state.status = await api("/api/status");
+  } catch (error) {
+    // 未初始化时后端会返回错误，此时展示初始化面板
+    document.getElementById("initPanel").style.display = "block";
+    document.getElementById("overviewBody").style.display = "none";
+    document.getElementById("chainMeta").innerHTML =
+      '<span class="badge warning"><i>▲</i>尚未初始化</span>';
+    loadWallets();
+    return null;
+  }
+  document.getElementById("initPanel").style.display = "none";
+  document.getElementById("overviewBody").style.display = "block";
+  renderMeta(state.status);
+  renderKpis(state.status);
+  renderChart();
+  renderRecent();
+  return state.status;
+}
+
+function renderMeta(s) {
+  document.getElementById("chainMeta").innerHTML =
+    '<span>' + esc(s.chain_name || "ArtChain") + '</span>' +
+    '<span>区块高度 <b>#' + s.height + '</b></span>' +
+    '<span>难度 <b>' + s.difficulty + '</b></span>' +
+    '<span>作品 <b>' + s.works_total + '</b></span>' +
+    '<span>待打包 <b>' + s.pending_txs + '</b></span>';
+}
+
+function renderKpis(s) {
+  const items = [
+    { label: "作品总数", value: s.works_total, color: "var(--series-1)",
+      sub: "有效 " + s.works_active + " · 争议 " + s.works_disputed +
+           " · 撤销 " + s.works_revoked + " · 无效 " + (s.works_invalid || 0) },
+    { label: "区块高度", value: s.height, color: "var(--series-3)",
+      sub: "共 " + s.blocks + " 个区块 · 难度 " + s.difficulty },
+    { label: "待打包交易", value: s.pending_txs, color: "var(--series-2)",
+      sub: s.pending_txs ? "需要执行出块才会写入区块" : "交易池已清空" },
+    { label: "积分流通", value: pointsText(s.points_supply || 0), color: "var(--series-2)",
+      sub: "持有 " + (s.points_holders || 0) + " 个地址" +
+           (s.points_cap ? " · 上限 " + pointsText(s.points_cap) : ""),
+      noCount: true },
+    { label: "权利人与流转", value: s.owners_total, color: "var(--series-1)",
+      sub: "转让 " + s.transfers_total + " 次 · 许可 " + s.licenses_total + " 项" },
+  ];
+  // 大号指标数字用默认比例数字（.value 不带 tabular-nums），
+  // 等宽数字只留给需要纵向对齐的表格列与坐标轴刻度
+  document.getElementById("kpiRow").innerHTML = items.map(item =>
+    '<div class="kpi">' +
+      '<div class="label"><span class="dot" style="background:' + item.color + '"></span>' +
+        esc(item.label) + '</div>' +
+      '<div class="value"' + (item.noCount ? ' data-no-count="1"' : "") + '>' +
+        item.value + '</div>' +
+      '<div class="sub">' + esc(item.sub) + '</div>' +
+    '</div>').join("");
+  // 数字滚动入场：0 到目标值的缓出动画，让概览页「活」起来。
+  // 环境自适应：页面隐藏（后台页签会把 rAF 停掉、定时器钳制到分钟级）或
+  // 用户偏好减弱动效时，直接落地终值，绝不依赖计时器才能显示真实数字。
+  document.querySelectorAll("#kpiRow .value").forEach(el => {
+    const target = Number(String(el.textContent).replace(/[^\d]/g, ""));
+    if (!Number.isFinite(target)) return;
+    const setFinal = () => { el.textContent = target; };
+    if (el.dataset.noCount || document.hidden ||
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setFinal();
+      return;
+    }
+    requestAnimationFrame(() => {
+      const t0 = performance.now();
+      const duration = 640;
+      (function frame(now) {
+        const t = Math.min(1, (now - t0) / duration);
+        const eased = 1 - Math.pow(1 - t, 3);
+        el.textContent = Math.round(target * eased);
+        if (t < 1) requestAnimationFrame(frame);
+      })(performance.now());
+    });
+    setTimeout(setFinal, 900);   // 兜底：rAF 中途被节流，终值也必然落地
+  });
+}
+
+async function renderChart() {
+  const data = await api("/api/chain");
+  const blocks = data.blocks.slice(-16);
+  const svg = document.getElementById("txChart");
+  const tip = document.getElementById("chartTip");
+  const wrap = document.getElementById("chartWrap");
+  if (!blocks.length) { svg.innerHTML = ""; return; }
+
+  const width = svg.clientWidth || wrap.clientWidth || 900;
+  const height = 190;
+  const pad = { top: 18, right: 12, bottom: 26, left: 34 };
+  const plotW = Math.max(120, width - pad.left - pad.right);
+  const plotH = height - pad.top - pad.bottom;
+  const counts = blocks.map(b => b.txs.length);
+  const maxCount = Math.max(1, ...counts);
+
+  const slot = plotW / blocks.length;
+  const barW = Math.max(3, Math.min(28, slot - 6));   // 相邻柱之间留出空隙
+  const ticks = 3;
+  let parts = [];
+
+  for (let i = 0; i <= ticks; i++) {
+    const value = Math.round(maxCount * i / ticks);
+    const y = pad.top + plotH - (plotH * i / ticks);
+    parts.push('<line class="grid-line" x1="' + pad.left + '" y1="' + y +
+               '" x2="' + (pad.left + plotW) + '" y2="' + y + '"></line>');
+    parts.push('<text class="axis-label" x="' + (pad.left - 7) + '" y="' + (y + 4) +
+               '" text-anchor="end">' + value + '</text>');
+  }
+  parts.push('<line class="baseline" x1="' + pad.left + '" y1="' + (pad.top + plotH) +
+             '" x2="' + (pad.left + plotW) + '" y2="' + (pad.top + plotH) + '"></line>');
+
+  blocks.forEach((block, index) => {
+    const count = block.txs.length;
+    const barH = Math.max(count > 0 ? 3 : 0, plotH * count / maxCount);
+    const x = pad.left + slot * index + (slot - barW) / 2;
+    const y = pad.top + plotH - barH;
+    const radius = Math.min(4, barW / 2);   // 顶端 4px 圆角，锚定基线
+    parts.push('<rect class="bar" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) +
+               '" width="' + barW.toFixed(1) + '" height="' + barH.toFixed(1) +
+               '" rx="' + radius + '" ry="' + radius +
+               '" data-i="' + index + '"><title>区块 #' + block.height + '：' +
+               count + ' 笔交易</title></rect>');
+    if (index % Math.ceil(blocks.length / 8) === 0 || index === blocks.length - 1) {
+      parts.push('<text class="axis-label" x="' + (x + barW / 2).toFixed(1) + '" y="' +
+                 (pad.top + plotH + 16) + '" text-anchor="middle">#' + block.height + '</text>');
+    }
+  });
+
+  svg.setAttribute("viewBox", "0 0 " + width + " " + height);
+  svg.innerHTML = parts.join("");
+
+  svg.querySelectorAll("rect.bar").forEach(rect => {
+    rect.addEventListener("mousemove", event => {
+      const block = blocks[Number(rect.dataset.i)];
+      tip.innerHTML = "区块 #" + block.height + "　<b>" + block.txs.length + "</b> 笔交易<br>" +
+                      '<span class="muted">' + fmtTime(block.time) + "</span>";
+      const box = wrap.getBoundingClientRect();
+      tip.style.display = "block";
+      tip.style.left = Math.min(event.clientX - box.left + 12, box.width - 190) + "px";
+      tip.style.top = (event.clientY - box.top - 46) + "px";
+    });
+    rect.addEventListener("mouseleave", () => { tip.style.display = "none"; });
+  });
+}
+
+async function renderRecent() {
+  const [chain, works] = await Promise.all([api("/api/chain"), api("/api/works")]);
+  const blocks = chain.blocks.slice(-6).reverse();
+  document.getElementById("recentBlocks").innerHTML = blocks.map(b =>
+    '<div class="row-between" style="padding:7px 0;border-bottom:1px solid var(--grid)">' +
+      '<span><b>#' + b.height + '</b> <span class="mono muted">' + esc(short(b.hash, 18)) + '</span></span>' +
+      '<span class="sec num">' + b.txs.length + ' 笔 · ' + fmtTime(b.time).slice(5, 16) + '</span>' +
+    '</div>').join("") || '<div class="empty">暂无区块</div>';
+
+  const latest = works.works.slice(-6).reverse();
+  document.getElementById("recentWorks").innerHTML = latest.map(w =>
+    '<div class="art-row" style="padding:8px 0;border-bottom:1px solid var(--grid);cursor:pointer" ' +
+      'onclick="showWork(\'' + esc(w.work_id) + '\');switchTab(\'works\')">' +
+      workThumb(w) +
+      '<div class="art-info"><b>' + esc(w.title) + '</b>' +
+        '<span class="sub">' + esc(w.category || "—") + ' · ' + statusBadge(w.status) + '</span></div>' +
+    '</div>').join("") ||
+    '<div class="empty"><div class="empty-art"></div>还没有登记过作品</div>';
+}
+
+/* ------------------------------------------------------------ 登记确权 */
+async function loadWallets() {
+  try {
+    const data = await api("/api/wallets");
+    state.wallets = data.wallets;
+    const options = data.wallets.map(w =>
+      '<option value="' + esc(w.name) + '">' + esc(w.name) +
+      (w.encrypted ? "（已加密）" : "（未加密）") + "</option>").join("");
+    const select = document.getElementById("regWallet");
+    select.innerHTML = options || '<option value="">（请先创建钱包）</option>';
+    preselectWallets();   // 登录会话的钱包默认选中
+    document.getElementById("walletList").innerHTML = data.wallets.length
+      ? '<table><thead><tr><th>名称</th><th>地址</th><th>保护方式</th><th>创建时间</th></tr></thead><tbody>' +
+        data.wallets.map(w =>
+          '<tr><td>' + esc(w.name) + '</td><td class="mono">' + esc(w.address) + '</td>' +
+          '<td>' + (w.encrypted ? '<span class="badge good"><i>●</i>口令加密</span>'
+                                : '<span class="badge critical"><i>■</i>明文</span>') + '</td>' +
+          '<td class="sec">' + fmtTime(w.created_at) + '</td></tr>').join("") +
+        '</tbody></table>'
+      : '<div class="empty">还没有钱包，请在下方创建一个</div>';
+  } catch (error) {
+    document.getElementById("walletList").innerHTML =
+      '<div class="empty">' + esc(error.message) + '</div>';
+  }
+}
+
+function readPassword(walletName, inputId) {
+  const value = document.getElementById(inputId).value;
+  if (value) state.secret[walletName] = value;
+  return value || state.secret[walletName] || null;
+}
+
+document.getElementById("btnRegister").addEventListener("click", function () {
+  const button = this;
+  const fileInput = document.getElementById("regFile");
+  const wallet = document.getElementById("regWallet").value;
+  if (!fileInput.files.length) { toast("请先选择作品文件", "error"); return; }
+  if (!wallet) { toast("请先创建并选择签名钱包", "error"); return; }
+
+  withBusy(button, "正在登记…", async () => {
+    try {
+      const file = fileInput.files[0];
+      const content = await fileToBase64(file);
+      const meta = {};
+      (document.getElementById("regMeta").value || "").split(",").forEach(pair => {
+        const index = pair.indexOf("=");
+        if (index > 0) meta[pair.slice(0, index).trim()] = pair.slice(index + 1).trim();
+      });
+      const year = document.getElementById("regYear").value;
+      const data = await api("/api/register", { method: "POST", body: {
+        wallet: wallet,
+        password: readPassword(wallet, "regPassword"),
+        filename: file.name,
+        content_base64: content,
+        title: document.getElementById("regTitle").value,
+        category: document.getElementById("regCategory").value,
+        author: document.getElementById("regAuthor").value,
+        year: year ? Number(year) : null,
+        created_at: document.getElementById("regCreated").value,
+        description: document.getElementById("regDesc").value,
+        meta: meta,
+        store_file: document.getElementById("regStore").checked,
+        auto_mine: true,
+      }});
+      state.lastWorkId = data.work_id;
+      renderRegisterResult(data);
+      // 成功时刻：结果卡滚入视野并闪一圈主题色，让用户「看见」自己的作品上链
+      const res = document.getElementById("registerResult");
+      res.classList.remove("flash");
+      void res.offsetWidth;               // 重置动画，连续登记也能再次闪光
+      res.scrollIntoView({ behavior: "smooth", block: "start" });
+      res.classList.add("flash");
+      buzz();
+      toast("<h4>确权成功</h4>作品《" + esc(data.title) + "》已写入区块 #" + data.height, "ok");
+      questDone("register");
+      refresh();
+    } catch (error) {
+      toast("<h4>登记失败</h4>" + esc(error.message), "error");
+    }
+  });
+});
+
+function renderRegisterResult(data) {
+  const fp = data.fingerprint;
+  const box = document.getElementById("registerResult");
+  box.style.display = "block";
+  box.innerHTML =
+    '<h2>登记结果<span class="hint">作品已写入区块，任何人都无法悄悄篡改</span></h2>' +
+    (data.stored_path
+      ? '<img class="art-hero" src="/api/blob/' + esc(data.work_id) + '" alt="' + esc(data.title) + '" ' +
+        'onclick="openLightbox(this.src)" onerror="this.style.display=\'none\'">'
+      : "") +
+    '<div class="grid2"><dl class="kv">' +
+      "<dt>作品编号</dt><dd class='mono'>" + esc(data.work_id) +
+        '<button class="copy-btn" onclick="copyText(\'' + data.work_id + '\', \'作品编号\')">复制</button></dd>' +
+      "<dt>作品名称</dt><dd>" + esc(data.title) + "</dd>" +
+      "<dt>交易哈希</dt><dd class='mono'>" + esc(data.txid) +
+        '<button class="copy-btn" onclick="copyText(\'' + data.txid + '\', \'交易哈希\')">复制</button></dd>' +
+      "<dt>所在区块</dt><dd>#" + data.height + " · " + fmtTime(data.block_time) + "</dd>" +
+    "</dl><dl class='kv'>" +
+      "<dt>SHA-256</dt><dd class='mono'>" + esc(fp.sha256) + "</dd>" +
+      (fp.phash ? "<dt>pHash</dt><dd class='mono'>" + esc(fp.phash) + "</dd>" : "") +
+      (fp.simhash ? "<dt>SimHash</dt><dd class='mono'>" + esc(fp.simhash) + "</dd>" : "") +
+      "<dt>文件类型</dt><dd>" + esc(fp.kind) + " · " + fmtSize(fp.size) +
+        (fp.width ? " · " + fp.width + "×" + fp.height : "") + "</dd>" +
+    "</dl></div>" +
+    '<div class="actions"><button class="btn ghost" onclick="showWork(\'' + esc(data.work_id) + '\');switchTab(\'works\')">查看详情</button>' +
+    '<a class="btn ghost" onclick="questDone(\'cert\')" ' +
+    'href="/api/cert/' + esc(data.work_id) + '?format=html" target="_blank">打开确权证书</a></div>';
+}
+
+/* ------------------------------------------------------------ 作品库 */
+async function loadWorks() {
+  const params = new URLSearchParams();
+  const keyword = document.getElementById("workKeyword").value.trim();
+  const owner = document.getElementById("workOwner").value.trim();
+  const status = document.getElementById("workStatus").value;
+  if (keyword) params.set("q", keyword);
+  if (owner) params.set("owner", owner);
+  if (status) params.set("status", status);
+  const list = document.getElementById("worksList");
+  list.innerHTML = skeletonRows(4);
+  try {
+    const data = await api("/api/works?" + params.toString());
+    list.innerHTML = data.works.length
+      ? '<table><thead><tr><th></th><th>作品</th><th>类别</th><th>作者</th>' +
+        '<th>当前权利人</th><th>状态</th><th>区块</th><th>登记时间</th></tr></thead><tbody>' +
+        data.works.map(w =>
+          '<tr class="clickable" onclick="showWork(\'' + esc(w.work_id) + '\')">' +
+          '<td class="thumb-cell">' + workThumb(w) + '</td>' +
+          "<td>" + esc(w.title) +
+            '<div class="muted mono" style="margin-top:3px">' + esc(short(w.work_id, 22)) + '</div></td>' +
+          '<td class="sec">' + esc(w.category) + "</td>" +
+          "<td>" + esc(w.author || "—") + "</td>" +
+          '<td class="mono">' + esc(short(w.owner, 18)) + "</td>" +
+          "<td>" + statusBadge(w.status) + "</td>" +
+          '<td class="num">#' + w.height + "</td>" +
+          '<td class="sec">' + fmtTime(w.registered_at) + "</td></tr>").join("") +
+        "</tbody></table>"
+      : '<div class="empty"><div class="empty-art"></div>' +
+        (keyword || owner || status
+          ? "没有符合条件的作品"
+          : "作品库还是空的——去「登记确权」上链第一件作品吧") + "</div>";
+  } catch (error) {
+    list.innerHTML = '<div class="empty">' + esc(error.message) + "</div>";
+    toast("<h4>查询失败</h4>" + esc(error.message), "error");
+  }
+}
+document.getElementById("btnSearchWorks").addEventListener("click", loadWorks);
+
+async function showWork(workId) {
+  try {
+    // 操作区要列出可选钱包；直接进"作品库"页时可能还没加载过。
+    if (!state.wallets.length) await loadWallets();
+    const data = await api("/api/work/" + encodeURIComponent(workId));
+    const work = data.work;
+    const proof = data.proof || {};
+    const box = document.getElementById("workDetail");
+    box.style.display = "block";
+    box.innerHTML =
+      '<div class="row-between"><h2>《' + esc(work.title) + "》 " +
+        statusBadge(work.status) + "</h2>" +
+        '<div class="actions" style="margin:0">' +
+        '<a class="btn ghost" ' +
+        'href="/api/blob/' + esc(workId) + '" target="_blank">查看原件</a>' +
+        '<a class="btn ghost" onclick="questDone(\'cert\')" ' +
+        'href="/api/cert/' + esc(workId) + '?format=html" target="_blank">确权证书</a>' +
+        '<a class="btn ghost" ' +
+        'href="/api/cert/' + esc(workId) + '?format=json" download>证书 JSON</a>' +
+        "</div></div>" +
+      (work.stored_path
+        ? '<img class="art-hero" src="/api/blob/' + esc(workId) + '" alt="《' + esc(work.title) + '》" ' +
+          'onclick="openLightbox(this.src)" onerror="this.style.display=\'none\'">'
+        : "") +
+      '<div class="grid2"><dl class="kv">' +
+        "<dt>作品编号</dt><dd class='mono'>" + esc(work.work_id) +
+          '<button class="copy-btn" onclick="copyText(\'' + work.work_id + '\', \'作品编号\')">复制</button></dd>' +
+        "<dt>类别 / 作者</dt><dd>" + esc(work.category) + " · " + esc(work.author || "—") + "</dd>" +
+        "<dt>创作年份</dt><dd>" + esc(work.year || "—") + " · " + esc(work.created_at || "—") + "</dd>" +
+        "<dt>原始权利人</dt><dd class='mono'>" + esc(work.creator) + "</dd>" +
+        "<dt>当前权利人</dt><dd class='mono'>" + esc(work.owner) +
+          '<button class="copy-btn" onclick="copyText(\'' + work.owner + '\', \'权利人地址\')">复制</button></dd>' +
+        "<dt>登记时间</dt><dd>" + fmtTime(work.registered_at) + "</dd>" +
+      "</dl><dl class='kv'>" +
+        "<dt>SHA-256</dt><dd class='mono'>" + esc(work.file_hash) +
+          '<button class="copy-btn" onclick="copyText(\'' + work.file_hash + '\', \'SHA-256\')">复制</button></dd>' +
+        (work.phash ? "<dt>pHash</dt><dd class='mono'>" + esc(work.phash) + "</dd>" : "") +
+        (work.ahash ? "<dt>aHash</dt><dd class='mono'>" + esc(work.ahash) + "</dd>" : "") +
+        (work.dhash ? "<dt>dHash</dt><dd class='mono'>" + esc(work.dhash) + "</dd>" : "") +
+        (work.simhash ? "<dt>SimHash</dt><dd class='mono'>" + esc(work.simhash) + "</dd>" : "") +
+        "<dt>文件</dt><dd>" + esc(work.kind) + " · " + fmtSize(work.size) +
+          (work.image_width ? " · " + work.image_width + "×" + work.image_height : "") + "</dd>" +
+      "</dl></div>" +
+      '<h2 style="margin-top:18px">上链存证</h2><dl class="kv">' +
+        "<dt>交易哈希</dt><dd class='mono'>" + esc(work.txid) +
+          '<button class="copy-btn" onclick="copyText(\'' + work.txid + '\', \'交易哈希\')">复制</button></dd>' +
+        "<dt>区块</dt><dd>#" + work.height + " · <span class='mono'>" + esc(short(work.block_hash, 40)) + "</span></dd>" +
+        "<dt>Merkle 根</dt><dd class='mono'>" + esc(proof.merkle_root || "—") + "</dd>" +
+        "<dt>存在性证明</dt><dd>" + (proof.valid
+            ? '<span class="badge good"><i>●</i>验证通过</span>（' + proof.merkle_proof.length + " 层路径）"
+            : '<span class="badge critical"><i>■</i>未通过</span>') + "</dd>" +
+      "</dl>" +
+      renderOps(work) + renderDisputes(data.disputes) + renderHistory(data.history) +
+      renderLicenses(data.licenses);
+    bindOps(workId);   // 必须在 innerHTML 之后再绑，否则拿不到那些节点
+    box.scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (error) {
+    toast("<h4>读取失败</h4>" + esc(error.message), "error");
+  }
+}
+
+function renderHistory(history) {
+  if (!history || !history.length) return "";
+  return '<h2 style="margin-top:18px">权属沿革</h2><table><thead><tr><th>时间</th><th>区块</th>' +
+    "<th>事项</th><th>说明</th><th>交易哈希</th></tr></thead><tbody>" +
+    history.map(h => "<tr><td class='sec'>" + fmtTime(h.time) + "</td><td class='num'>#" + h.height +
+      "</td><td>" + esc(h.action) + "</td><td class='sec'>" + esc(h.detail || "") + "</td>" +
+      "<td class='mono'>" + esc(short(h.txid, 18)) + "</td></tr>").join("") + "</tbody></table>";
+}
+function disputeBadge(status) {
+  const map = { "待裁决": "warning", "已驳回": "good", "已支持": "critical", "已终止": "muted" };
+  return '<span class="badge ' + (map[status] || "muted") + '"><i>◆</i>' +
+         esc(status || "—") + "</span>";
+}
+/* 争议记录。裁决人需要先看清"谁在异议、理由是什么"，才谈得上裁决，
+ * 所以这不只是审计信息，是裁决这个动作的前置输入。 */
+function renderDisputes(disputes) {
+  if (!disputes || !disputes.length) return "";
+  return '<h2 style="margin-top:18px">权属争议</h2>' +
+    "<table><thead><tr><th>提出时间</th><th>区块</th><th>异议人</th><th>异议理由</th>" +
+    "<th>状态</th><th>裁决人</th><th>裁决理由</th></tr></thead><tbody>" +
+    disputes.map(d =>
+      "<tr><td class='sec'>" + fmtTime(d.time) + "</td><td class='num'>#" + d.height + "</td>" +
+      "<td class='mono'>" + esc(short(d.claimant, 18)) + "</td>" +
+      "<td class='sec'>" + esc(d.reason || "") + "</td>" +
+      "<td>" + disputeBadge(d.status) + "</td>" +
+      "<td class='mono'>" + esc(d.arbiter ? short(d.arbiter, 18) : "—") + "</td>" +
+      "<td class='sec'>" + esc(d.resolve_reason || d.ruling || "—") + "</td></tr>").join("") +
+    "</tbody></table>";
+}
+
+function renderLicenses(licenses) {
+  if (!licenses || !licenses.length) return "";
+  return '<h2 style="margin-top:18px">授权许可</h2><table><thead><tr><th>起始</th><th>截止</th>' +
+    "<th>类型</th><th>被许可方</th><th>地域</th><th>费用</th></tr></thead><tbody>" +
+    licenses.map(l => "<tr><td class='sec'>" + esc(l.start || "—") + "</td><td class='sec'>" +
+      esc(l.end || "—") + "</td><td>" + esc(l.scope) + "</td><td class='mono'>" +
+      esc(short(l.to, 22)) + "</td><td class='sec'>" + esc(l.territory) + "</td><td class='num'>" +
+      esc(l.royalty || "—") + "</td></tr>").join("") + "</tbody></table>";
+}
+
+/* ------------------------------------------------------------ 流转与处置
+ *
+ * 后端一直有 /api/transfer、/api/license、/api/dispute、/api/revoke 四个接口，
+ * 但前端一个入口都没有 —— 作品登记完就再也动不了，只能回命令行。
+ * 这一块把它们接到作品详情页上。
+ *
+ * 表单采取「一次渲染、之后只切显隐」的做法，不是每次点击重建 DOM：
+ * 重建会把用户已经填好的内容清空，换一个面板就得重填一遍。
+ */
+function renderOps(work) {
+  const status = work.status;
+  // 前四个动作只在「有效」时可用；裁决恰恰相反，只在「争议中」时可用。
+  // 两者永远互斥——一件作品不可能既允许转让又等着被裁决。
+  const canAct = status === "有效";
+  const locked = canAct ? "" : " disabled";
+  const canRule = status === "争议中";
+  const ruleLocked = canRule ? "" : " disabled";
+  const options = state.wallets.length
+    ? state.wallets.map(w =>
+        '<option value="' + esc(w.name) + '"' +
+        (state.session && w.name === state.session.name ? " selected" : "") + ">" +
+        esc(w.name) +
+        (w.encrypted ? "（已加密）" : "（未加密）") + "</option>").join("")
+    : '<option value="">（请先创建钱包）</option>';
+
+  // 四个面板都要"选钱包 + 填口令"，抽出来免得写四遍。
+  const signer = id =>
+    '<div class="grid2">' +
+      '<label class="field"><span>签名钱包 *</span><select id="' + id + 'Wallet">' +
+        options + "</select></label>" +
+      '<label class="field"><span>钱包口令</span>' +
+        '<div class="pwd-wrap">' +
+          '<input type="password" id="' + id + 'Pass" placeholder="未加密钱包留空">' +
+          '<button type="button" class="pwd-eye" data-target="' + id + 'Pass">显示</button>' +
+        "</div></label>" +
+    "</div>";
+
+  const panel = (id, title, hint, body) =>
+    '<div class="op-panel" id="op-' + id + '" style="display:none">' +
+      "<h3>" + esc(title) + '</h3><p class="op-hint">' + esc(hint) + "</p>" +
+      body + signer(id) +
+      '<div class="op-actions"><button class="btn" id="op-btn-' + id + '">提交</button>' +
+      '<button class="btn ghost" onclick="toggleOp(\'' + id + '\')">取消</button></div>' +
+    "</div>";
+
+  // 状态不同，提示的话也不同。裁定不了的作品要说清楚"为什么点不动"，
+  // 否则用户只会觉得按钮坏了。
+  const callout = canAct
+    ? ""
+    : '<div class="callout">当前状态为「' + esc(status) + "」，转让、授权、争议、撤销均不可用。" +
+      (canRule
+        ? "作品正处于争议中，须先由无关第三方作出<b>争议裁决</b>，才能解除锁定。"
+        : "该状态没有待裁决的争议，也没有可执行的流转动作。") + "</div>";
+
+  return '<h2 style="margin-top:18px">流转与处置</h2>' + callout +
+    '<div class="ops">' +
+      '<button class="op" data-op="transfer"' + locked + ' onclick="toggleOp(\'transfer\')">转让</button>' +
+      '<button class="op" data-op="license"' + locked + ' onclick="toggleOp(\'license\')">授权许可</button>' +
+      '<button class="op" data-op="dispute"' + locked + ' onclick="toggleOp(\'dispute\')">提出争议</button>' +
+      '<button class="op" data-op="revoke"' + locked + ' onclick="toggleOp(\'revoke\')">撤销登记</button>' +
+    "</div>" +
+    '<div class="ops" style="margin-top:10px">' +
+      '<button class="op" data-op="adjudicate"' + ruleLocked +
+        ' onclick="toggleOp(\'adjudicate\')">争议裁决</button>' +
+      '<span class="op-hint" style="align-self:center;margin:0 0 0 10px">' +
+        "仅在作品处于「争议中」时可用，且必须由与本案无关的第三方发起</span>" +
+    "</div>" +
+
+    panel("transfer", "版权转让", "转让后当前权利人立即变更，原权利人不再享有该作品的财产权。",
+      '<div class="grid3">' +
+        '<label class="field"><span>受让方地址 *</span><input id="transferTo" placeholder="ART…"></label>' +
+        '<label class="field"><span>转让价款</span><input id="transferPrice" placeholder="12000.00"></label>' +
+        '<label class="field"><span>备注</span><input id="transferNote" placeholder="画廊成交"></label>' +
+      "</div>") +
+
+    panel("license", "授权许可", "授权不改变权利人，只是允许他人在约定范围内使用。",
+      '<div class="grid3">' +
+        '<label class="field"><span>被许可方地址 *</span><input id="licenseTo" placeholder="ART…"></label>' +
+        '<label class="field"><span>授权类型</span><select id="licenseScope">' +
+          "<option>非独家</option><option>独家</option></select></label>" +
+        '<label class="field"><span>地域</span><input id="licenseTerritory" value="全球"></label>' +
+        '<label class="field"><span>费用</span><input id="licenseRoyalty" placeholder="800.00"></label>' +
+        '<label class="field"><span>起始</span><input id="licenseStart" type="date"></label>' +
+        '<label class="field"><span>截止</span><input id="licenseEnd" type="date"></label>' +
+      "</div>" +
+      '<label class="field" style="margin-top:14px"><span>用途</span>' +
+        '<input id="licensePurpose" placeholder="画册出版"></label>') +
+
+    panel("dispute", "提出权属争议", "争议期间作品会被锁定，转让将被阻断，直到争议得到裁决。",
+      '<label class="field"><span>争议理由 *</span>' +
+        '<textarea id="disputeReason" placeholder="例如：该作品实为本人 2023 年创作，被抢先登记"></textarea></label>' +
+      '<label class="field" style="margin-top:14px"><span>证据哈希（可选）</span>' +
+        '<input id="disputeEvidence" placeholder="证据文件的 SHA-256"></label>') +
+
+    panel("revoke", "撤销登记", "撤销后该作品不再受本链保护，且不可恢复。",
+      '<label class="field"><span>撤销理由 *</span>' +
+        '<textarea id="revokeReason" placeholder="例如：登记信息有误，申请撤销"></textarea></label>') +
+
+    panel("adjudicate", "争议裁决",
+      "裁决须由与本案无关的第三方作出——权利人本人和异议提出人都不能裁决，链上会拒绝。" +
+      "驳回则异议不成立、作品恢复有效；支持则登记被认定无效、指纹占用释放。",
+      '<div class="grid3">' +
+        '<label class="field"><span>裁决结论 *</span><select id="adjRuling">' +
+          '<option value="驳回">驳回异议 —— 恢复为有效</option>' +
+          '<option value="支持">支持异议 —— 登记转为无效</option></select></label>' +
+        '<label class="field"><span>证据哈希（可选）</span>' +
+          '<input id="adjEvidence" placeholder="裁决依据文件的 SHA-256"></label>' +
+      "</div>" +
+      '<label class="field" style="margin-top:14px"><span>裁决理由 *</span>' +
+        '<textarea id="adjReason" placeholder="例如：异议人提交的创作底稿时间早于登记时间，异议成立"></textarea></label>');
+}
+
+function toggleOp(id) {
+  // 一次只开一个面板，否则五个表单同时摊开会把页面撑得很长。
+  ["transfer", "license", "dispute", "revoke", "adjudicate"].forEach(name => {
+    const panel = document.getElementById("op-" + name);
+    if (!panel) return;
+    const open = (name === id) && panel.style.display === "none";
+    panel.style.display = open ? "block" : "none";
+    const button = document.querySelector('button.op[data-op="' + name + '"]');
+    if (button) button.classList.toggle("on", open);
+  });
+}
+
+// 把五个按钮接到各自的接口上。validate 返回非空字符串表示本地校验没过，不发请求。
+function bindOps(workId) {
+  const wire = (id, path, validate, build) => {
+    const button = document.getElementById("op-btn-" + id);
+    if (!button) return;
+    button.addEventListener("click", () => {
+      const select = document.getElementById(id + "Wallet");
+      if (!select || !select.value) { toast("请先创建并选择签名钱包", "error"); return; }
+      const problem = validate();
+      if (problem) { toast(problem, "error"); return; }
+      const body = build(select.value);
+      // 口令优先取输入框；留空则用本次会话里已经记住的（见 readPassword）。
+      body.password = readPassword(select.value, id + "Pass");
+      body.work_id = workId;
+      body.auto_mine = true;
+      runOp(button, path, body);
+    });
+  };
+
+  wire("transfer", "/api/transfer",
+    () => document.getElementById("transferTo").value.trim() ? null : "请填写受让方地址",
+    wallet => ({ wallet: wallet,
+                 to: document.getElementById("transferTo").value.trim(),
+                 price: document.getElementById("transferPrice").value.trim() || null,
+                 note: document.getElementById("transferNote").value.trim() }));
+
+  wire("license", "/api/license",
+    () => document.getElementById("licenseTo").value.trim() ? null : "请填写被许可方地址",
+    wallet => ({ wallet: wallet,
+                 to: document.getElementById("licenseTo").value.trim(),
+                 scope: document.getElementById("licenseScope").value,
+                 territory: document.getElementById("licenseTerritory").value.trim() || "全球",
+                 royalty: document.getElementById("licenseRoyalty").value.trim() || null,
+                 start: document.getElementById("licenseStart").value.trim() || null,
+                 end: document.getElementById("licenseEnd").value.trim() || null,
+                 purpose: document.getElementById("licensePurpose").value.trim() }));
+
+  wire("dispute", "/api/dispute",
+    () => document.getElementById("disputeReason").value.trim() ? null : "请填写争议理由",
+    wallet => ({ wallet: wallet,
+                 reason: document.getElementById("disputeReason").value.trim(),
+                 evidence_hash: document.getElementById("disputeEvidence").value.trim() }));
+
+  wire("revoke", "/api/revoke",
+    () => document.getElementById("revokeReason").value.trim() ? null : "请填写撤销理由",
+    wallet => ({ wallet: wallet,
+                 reason: document.getElementById("revokeReason").value.trim() }));
+
+  wire("adjudicate", "/api/adjudicate",
+    () => document.getElementById("adjReason").value.trim() ? null : "请填写裁决理由",
+    wallet => ({ wallet: wallet,
+                 ruling: document.getElementById("adjRuling").value,
+                 reason: document.getElementById("adjReason").value.trim(),
+                 evidence_hash: document.getElementById("adjEvidence").value.trim() }));
+}
+
+async function runOp(button, path, body) {
+  withBusy(button, "提交中…", async () => {
+    try {
+      const data = await api(path, { method: "POST", body: body });
+      toast("<h4>操作成功</h4>" + esc(data.message || "") +
+            (data.height ? "，已写入区块 #" + data.height : "") +
+            '<br><span class="mono">' + esc(short(data.txid, 34)) + "</span>", "ok");
+      await refresh();
+      loadWorks();
+      await showWork(body.work_id);   // 重新拉一次详情，状态与沿革立刻更新
+    } catch (error) {
+      toast("<h4>操作失败</h4>" + esc(error.message), "error");
+    }
+  });
+}
+
+/* ------------------------------------------------------------ 侵权比对 */
+document.getElementById("btnCompare").addEventListener("click", function () {
+  const button = this;
+  const fileInput = document.getElementById("cmpFile");
+  if (!fileInput.files.length) { toast("请先选择要比对的文件", "error"); return; }
+  withBusy(button, "正在比对…", async () => {
+    try {
+      const file = fileInput.files[0];
+      const data = await api("/api/compare", { method: "POST", body: {
+        filename: file.name,
+        content_base64: await fileToBase64(file),
+        work_id: document.getElementById("cmpWork").value.trim() || null,
+        top: Number(document.getElementById("cmpTop").value) || 10,
+      }});
+      // 记住上传文件的预览图 URL，结果卡里做「原图 vs 链上作品」并排对比
+      const previewImg = document.getElementById("cmpFilepreview");
+      state.cmpPreview = (file.type && file.type.startsWith("image/") &&
+                          previewImg.style.display !== "none") ? previewImg.src : null;
+      renderCompare(data, file.name);
+      const risk = data.risk;
+      toast("<h4>比对完成</h4>" + esc(risk.text), risk.level >= 3 ? "error" : "ok");
+      questDone("compare");
+    } catch (error) {
+      toast("<h4>比对失败</h4>" + esc(error.message), "error");
+    }
+  });
+});
+
+function meter(score, level) {
+  const cls = level >= 4 ? "bad" : (level >= 3 ? "warn" : "");
+  return '<div class="meter"><div class="track"><div class="fill ' + cls +
+         '" style="width:' + (score * 100).toFixed(1) + '%"></div></div>' +
+         '<span class="val">' + score.toFixed(4) + "</span></div>";
+}
+
+function renderCompare(data, filename) {
+  const fp = data.target_fingerprint;
+  const box = document.getElementById("compareResult");
+  box.style.display = "block";
+  const top = data.results[0] || null;
+  // 「待比对文件 vs 最相似链上作品」并排：让用户亲眼看见为什么判定相似
+  const duelBoxes = [];
+  if (state.cmpPreview) {
+    duelBoxes.push('<div class="duel-box"><img class="zoom" src="' + state.cmpPreview +
+      '" alt="待比对文件" onclick="openLightbox(this.src)">' +
+      '<div class="duel-cap">待比对文件</div></div>');
+  }
+  if (top && top.label.stored_path) {
+    duelBoxes.push('<div class="duel-box"><img class="zoom" src="/api/thumb/' + esc(top.id) +
+      '?w=240" alt="' + esc(top.label.title) + '" onerror="this.parentElement.style.display=\'none\'" ' +
+      'onclick="openLightbox(\'/api/blob/' + esc(top.id) + '\')">' +
+      '<div class="duel-cap">链上作品《' + esc(top.label.title) + '》· 相似度 ' +
+      (top.score * 100).toFixed(1) + '%</div></div>');
+  }
+  box.innerHTML =
+    '<h2>比对结果</h2>' +
+    (duelBoxes.length
+      ? '<div class="duel"' + (duelBoxes.length === 1 ? ' style="grid-template-columns:1fr;max-width:480px"' : "") +
+        '>' + duelBoxes.join("") + "</div>"
+      : "") +
+    '<div class="grid2"><dl class="kv">' +
+      "<dt>待比对文件</dt><dd>" + esc(filename || "已上传的文件") + "</dd>" +
+      "<dt>SHA-256</dt><dd class='mono'>" + esc(fp.sha256) + "</dd>" +
+      (fp.phash ? "<dt>pHash</dt><dd class='mono'>" + esc(fp.phash) + "</dd>" : "") +
+      "<dt>文件类型</dt><dd>" + esc(fp.kind) + " · " + fmtSize(fp.size) + "</dd>" +
+      "<dt>比对样本</dt><dd>" + data.checked + " 件链上作品</dd>" +
+    "</dl><dl class='kv'>" +
+      "<dt>比对结论</dt><dd>" + esc(data.risk.text) + "</dd>" +
+      "<dt>最相似作品</dt><dd>" + esc(data.risk.title || "—") + "</dd>" +
+    "</dl></div>" +
+    (data.results.length
+      ? '<table style="margin-top:14px"><thead><tr><th>相似度</th><th>判定</th><th>作品</th>' +
+        "<th>权利人</th><th>状态</th><th>pHash 距离</th><th>区块</th></tr></thead><tbody>" +
+        data.results.map(r =>
+          '<tr class="clickable" onclick="showWork(\'' + esc(r.id) + '\');switchTab(\'works\')">' +
+          "<td>" + meter(r.score, r.level) + "</td>" +
+          "<td>" + levelBadge(r.level) + "</td>" +
+          "<td>《" + esc(r.label.title) + "》<div class='muted mono'>" + esc(short(r.id, 20)) + "</div></td>" +
+          "<td class='mono'>" + esc(short(r.label.owner, 16)) + "</td>" +
+          "<td>" + statusBadge(r.label.status) + "</td>" +
+          "<td class='num'>" + (r.distances.phash === undefined ? "—" : r.distances.phash) + "</td>" +
+          "<td class='num'>#" + r.label.height + "</td></tr>").join("") + "</tbody></table>"
+      : '<div class="empty">链上暂无可比对的作品</div>') +
+    '<div class="note">判定依据：SHA-256 相同为「完全一致」；感知指纹（pHash/aHash/dHash）' +
+    "按加权汉明距离给出相似度，分值越高越可能是同一作品经过压缩、缩放或调色后的副本。</div>";
+}
+
+function switchTab(name) {
+  const button = document.querySelector('nav button[data-tab="' + name + '"]');
+  if (button) button.click();
+}
+
+/* ------------------------------------------------------------ 区块浏览 */
+async function loadBlocks() {
+  try {
+    const data = await api("/api/chain");
+    const blocks = data.blocks.slice().reverse().slice(0, 40);
+    document.getElementById("blockList").innerHTML =
+      '<table><thead><tr><th>高度</th><th>区块哈希</th><th>Merkle 根</th><th>交易数</th>' +
+      "<th>出块时间</th><th>随机数</th></tr></thead><tbody>" +
+      blocks.map(b =>
+        '<tr class="clickable" onclick="showBlock(' + b.height + ')">' +
+        '<td class="num">#' + b.height + "</td>" +
+        '<td class="mono">' + esc(short(b.hash, 26)) + "</td>" +
+        '<td class="mono">' + esc(short(b.merkle_root, 18)) + "</td>" +
+        '<td class="num">' + b.txs.length + "</td>" +
+        '<td class="sec">' + fmtTime(b.time) + "</td>" +
+        '<td class="num sec">' + b.nonce + "</td></tr>").join("") + "</tbody></table>";
+  } catch (error) {
+    toast("<h4>读取失败</h4>" + esc(error.message), "error");
+  }
+}
+
+async function showBlock(height) {
+  try {
+    const block = await api("/api/block/" + height);
+    const box = document.getElementById("blockDetail");
+    box.style.display = "block";
+    box.innerHTML = "<h2>区块 #" + block.height + "</h2><dl class='kv'>" +
+      "<dt>区块哈希</dt><dd class='mono'>" + esc(block.hash) + "</dd>" +
+      "<dt>前序哈希</dt><dd class='mono'>" + esc(block.prev_hash) + "</dd>" +
+      "<dt>Merkle 根</dt><dd class='mono'>" + esc(block.merkle_root) + "</dd>" +
+      "<dt>出块时间</dt><dd>" + fmtTime(block.time) + "</dd>" +
+      "<dt>出块人</dt><dd class='mono'>" + esc(block.miner || "—") + "</dd>" +
+      "<dt>难度 / 随机数</dt><dd>" + block.difficulty + " / " + block.nonce + "</dd></dl>" +
+      (block.txs.length
+        ? '<table style="margin-top:12px"><thead><tr><th>#</th><th>类型</th><th>发起方</th>' +
+          "<th>交易哈希</th><th>时间</th></tr></thead><tbody>" +
+          block.txs.map((tx, index) =>
+            "<tr><td class='num'>" + index + "</td><td>" + esc(tx.type) + "</td>" +
+            "<td class='mono'>" + esc(short(tx.sender, 16)) + "</td>" +
+            "<td class='mono'>" + esc(tx.txid) + "</td>" +
+            "<td class='sec'>" + fmtTime(tx.time) + "</td></tr>").join("") + "</tbody></table>"
+        : '<div class="empty">该区块只有创世信息</div>');
+    box.scrollIntoView({ behavior: "smooth", block: "start" });
+  } catch (error) {
+    toast("<h4>读取失败</h4>" + esc(error.message), "error");
+  }
+}
+
+document.getElementById("btnVerifyChain").addEventListener("click", function () {
+  withBusy(this, "校验中…", async () => {
+    try {
+      const data = await api("/api/verify", { method: "POST", body: {} });
+      document.getElementById("verifyResult").innerHTML = data.valid
+        ? '<span class="badge good"><i>●</i>整链校验通过</span> 共 ' + data.blocks +
+          " 个区块、" + data.txs + " 笔交易，前向哈希链接、Merkle 根、工作量证明与签名全部一致。"
+        : '<span class="badge critical"><i>■</i>校验失败</span> ' + esc(data.errors.join("；"));
+    } catch (error) {
+      toast("<h4>校验失败</h4>" + esc(error.message), "error");
+    }
+  });
+});
+
+document.getElementById("btnMine").addEventListener("click", function () {
+  const wallet = promptWalletPassword();
+  if (wallet === null) return;
+  withBusy(this, "挖矿中…", async () => {
+    try {
+      const data = await api("/api/mine", { method: "POST", body: wallet });
+      toast("<h4>出块成功</h4>区块 #" + data.height + " 打包 " + data.tx_count +
+            " 笔交易，随机数 " + data.nonce, "ok");
+      refresh();
+      loadMempool();
+      loadBlocks();
+    } catch (error) {
+      toast("<h4>出块失败</h4>" + esc(error.message), "error");
+    }
+  });
+});
+
+function promptWalletPassword() {
+  // 已登录会话优先：口令还在内存里，直接用当前账号，不再打扰用户
+  if (state.session) {
+    return { wallet: state.session.name,
+             password: state.secret[state.session.name] || null };
+  }
+  const names = state.wallets.map(w => w.name);
+  if (!names.length) { toast("请先创建钱包", "error"); return null; }
+  const name = prompt("使用哪个钱包出块？\n可选：" + names.join("、"), names[0]);
+  if (!name) return null;
+  let password = state.secret[name];
+  if (password === undefined) {
+    password = prompt("钱包 " + name + " 的口令（未加密可留空）");
+    if (password === null) return null;
+    state.secret[name] = password;
+  }
+  return { wallet: name, password: password };
+}
+
+/* ------------------------------------------------------------ 工具页 */
+document.getElementById("btnNewWallet").addEventListener("click", function () {
+  const name = document.getElementById("newWalletName").value.trim();
+  if (!name) { toast("请填写钱包名称", "error"); return; }
+  withBusy(this, "生成助记词…", async () => {
+    try {
+      const password = document.getElementById("newWalletPass").value || null;
+      const data = await api("/api/wallet/new", { method: "POST",
+        body: { name: name, password: password,
+                label: document.getElementById("newWalletLabel").value, words: 12 } });
+      if (password) state.secret[name] = password;
+      // 与登录门创建同流程：展示助记词并验证抄写，验证后刷新钱包列表
+      showMnemonic(name, password, data.mnemonic, false);
+      document.getElementById("newWalletName").value = "";
+      document.getElementById("newWalletPass").value = "";
+      const done = document.getElementById("btnMnemonicDone");
+      done.addEventListener("click", () => {
+        setTimeout(() => { loadWallets(); }, 600);
+      }, { once: true });
+    } catch (error) {
+      toast("<h4>创建失败</h4>" + esc(error.message), "error");
+    }
+  });
+});
+
+async function loadPeers() {
+  try {
+    const data = await api("/api/network");
+    document.getElementById("peerList").value = data.peers.join("、") || "（暂无）";
+  } catch (error) { /* 忽略 */ }
+}
+document.getElementById("btnAddPeer").addEventListener("click", function () {
+  withBusy(this, "添加中…", async () => {
+    try {
+      await api("/api/peer", { method: "POST",
+        body: { url: document.getElementById("peerUrl").value.trim() }});
+      document.getElementById("peerUrl").value = "";
+      loadPeers();
+      toast("节点已添加", "ok");
+    } catch (error) {
+      toast("<h4>添加失败</h4>" + esc(error.message), "error");
+    }
+  });
+});
+document.getElementById("btnSync").addEventListener("click", function () {
+  withBusy(this, "同步中…", async () => {
+    try {
+      const data = await api("/api/sync", { method: "POST", body: {} });
+      const lines = data.report.map(r => esc(r.peer) + "：" + esc(r.message)).join("<br>");
+      toast("<h4>同步完成</h4>" + lines + "<br>本地高度 #" + data.height, "ok");
+      refresh();
+    } catch (error) {
+      toast("<h4>同步失败</h4>" + esc(error.message), "error");
+    }
+  });
+});
+
+async function loadMempool() {
+  try {
+    const data = await api("/api/mempool");
+    document.getElementById("mempoolList").innerHTML = data.txs.length
+      ? '<table><thead><tr><th>交易哈希</th><th>类型</th><th>发起方</th><th>nonce</th>' +
+        "<th>提交时间</th></tr></thead><tbody>" +
+        data.txs.map(tx => '<tr><td class="mono">' + esc(short(tx.txid, 22)) + "</td><td>" +
+          esc(tx.type) + "</td><td class='mono'>" + esc(short(tx.sender, 16)) + "</td>" +
+          "<td class='num'>" + tx.nonce + "</td><td class='sec'>" + fmtTime(tx.time) +
+          "</td></tr>").join("") + "</tbody></table>"
+      : '<div class="empty">待打包池为空</div>';
+  } catch (error) {
+    document.getElementById("mempoolList").innerHTML =
+      '<div class="empty">' + esc(error.message) + "</div>";
+  }
+}
+
+/* ------------------------------------------------------------ 初始化 */
+document.getElementById("btnInit").addEventListener("click", function () {
+  withBusy(this, "创建中…", async () => {
+    try {
+      const data = await api("/api/init", { method: "POST", body: {
+        name: document.getElementById("initName").value,
+        operator: document.getElementById("initOperator").value,
+        difficulty: Number(document.getElementById("initDifficulty").value) || 4,
+      }});
+      toast("<h4>创世区块已创建</h4>难度 " + data.difficulty + "，哈希 " +
+            esc(short(data.hash, 24)), "ok");
+      refresh();
+    } catch (error) {
+      toast("<h4>创建失败</h4>" + esc(error.message), "error");
+    }
+  });
+});
+
+/* ------------------------------------------------------------ 社区（一切皆上链）
+ * feed 里每张卡片都是一笔 POST 交易：高度、txid、签名者全部可见；
+ * 点赞是一笔 LIKE 交易，上链即永久——链上的赞没有后悔药。 */
+let feedPosts = [];
+
+async function loadPosts(highlightNew) {
+  const box = document.getElementById("feed");
+  box.innerHTML = skeletonRows(4, true);
+  try {
+    const params = new URLSearchParams({ limit: "50" });
+    if (state.session) params.set("viewer", state.session.address);
+    if (state.feedFilter) params.set("author", state.feedFilter);
+    const data = await api("/api/posts?" + params.toString());
+    feedPosts = data.posts;
+    document.getElementById("feedTotal").textContent =
+      "共 " + data.total + " 条 · 每条都是签名交易";
+    document.getElementById("feedFilterChip").classList.toggle("on", !!state.feedFilter);
+    box.innerHTML = feedPosts.length
+      ? feedPosts.map(postCard).join("")
+      : '<div class="empty">' + (state.feedFilter
+          ? "你还没有发过上链帖" : "链上还没有帖子——成为第一个发言的人，写入区块即永久") + "</div>";
+    if (highlightNew && feedPosts.length) {
+      box.firstElementChild.classList.add("flash");
+      box.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  } catch (error) {
+    box.innerHTML = '<div class="empty">' + esc(error.message) + "</div>";
+  }
+}
+
+function postCard(p) {
+  const id = esc(p.post_id);
+  const mine = state.session && p.author === state.session.address;
+  const img = p.image_hash
+    ? '<a href="/api/postimg/' + id + '" target="_blank">' +
+      '<img class="post-img" src="/api/postimg/' + id + '" alt="帖子附图" loading="lazy"></a>'
+    : "";
+  return '<article class="post" id="post-' + id + '">' +
+    '<div class="post-head">' +
+      '<span class="avatar" style="' + avatarStyle(p.author) + '"></span>' +
+      '<span class="who"><b>' + (mine ? "我" : esc(short(p.author, 14))) + '</b>' +
+        '<span class="addr">' + esc(p.author) + '</span></span>' +
+      '<span class="time">' + fmtWhen(p.time) + '</span>' +
+    '</div>' +
+    '<div class="post-text">' +
+      (p.topic ? '<span class="post-topic">#' + esc(p.topic) + '</span>' : "") +
+      esc(p.text) + '</div>' + img +
+    '<div class="post-meta">block #' + p.height + ' · tx ' + esc(String(p.txid).slice(0, 16)) +
+      ' · sig ' + esc(short(p.author, 12)) + ' · post ' + id + '</div>' +
+    '<div class="post-actions">' +
+      '<button class="' + (p.liked_by_viewer ? "liked" : "") + '" ' +
+        (p.liked_by_viewer ? "disabled " : "") +
+        'onclick="likePost(\'' + id + '\')">' +
+        (p.liked_by_viewer ? "♥ 已赞 " : "♡ 赞 ") + p.likes + '</button>' +
+      '<button onclick="toggleReply(\'' + id + '\')">回复' +
+        (p.replies ? " " + p.replies : "") + '</button>' +
+      '<button onclick="showPostProof(\'' + id + '\')">上链凭证</button>' +
+    '</div>' +
+    '<div class="reply-box" id="replybox-' + id + '">' +
+      '<input id="replyinput-' + id + '" maxlength="2000" placeholder="回复也会签名上链，无法撤回…">' +
+      '<button class="btn" onclick="submitReply(\'' + id + '\')">回复上链</button>' +
+    '</div>' +
+    '<div class="post-detail" id="detail-' + id + '"></div>' +
+  '</article>';
+}
+
+function sessionBody(extra) {
+  if (!state.session) { toast("请先登录钱包", "error"); return null; }
+  return Object.assign({
+    wallet: state.session.name,
+    password: state.secret[state.session.name] || null,
+    auto_mine: true,
+  }, extra || {});
+}
+
+async function likePost(postId) {
+  const body = sessionBody({ post_id: postId });
+  if (!body) return;
+  try {
+    const data = await api("/api/like", { method: "POST", body: body });
+    buzz();
+    toast("<h4>赞已上链 ♥</h4>写入区块 #" + data.height +
+      '<br><span class="mono">' + esc(short(data.txid, 34)) + '</span>' +
+      "<br>链上的赞没有后悔药——永久有效，不可撤回。", "ok");
+    questDone("like");
+    loadPosts();
+    refresh();
+  } catch (error) {
+    toast("<h4>点赞失败</h4>" + esc(error.message), "error");
+  }
+}
+
+function toggleReply(postId) {
+  document.getElementById("replybox-" + postId).classList.toggle("on");
+  const input = document.getElementById("replyinput-" + postId);
+  if (input) input.focus();
+}
+
+async function submitReply(postId) {
+  const input = document.getElementById("replyinput-" + postId);
+  const text = (input.value || "").trim();
+  if (!text) { toast("回复内容不能为空", "error"); return; }
+  const body = sessionBody({ text: text, reply_to: postId });
+  if (!body) return;
+  try {
+    const data = await api("/api/post", { method: "POST", body: body });
+    input.value = "";
+    toast("<h4>回复已上链</h4>区块 #" + data.height +
+      '<br><span class="mono">' + esc(short(data.txid, 34)) + "</span>", "ok");
+    loadPosts().then(() => showPostProof(postId));
+  } catch (error) {
+    toast("<h4>回复失败</h4>" + esc(error.message), "error");
+  }
+}
+
+async function showPostProof(postId) {
+  const box = document.getElementById("detail-" + postId);
+  if (box.classList.contains("on")) { box.classList.remove("on"); return; }
+  box.innerHTML = '<div class="empty">正在取 Merkle 证明…</div>';
+  box.classList.add("on");
+  try {
+    const data = await api("/api/post/" + encodeURIComponent(postId) +
+      (state.session ? "?viewer=" + encodeURIComponent(state.session.address) : ""));
+    const proof = data.proof || {};
+    box.innerHTML =
+      '<dl class="kv">' +
+        "<dt>交易哈希</dt><dd class='mono'>" + esc(proof.txid || data.post.txid) + "</dd>" +
+        "<dt>所在区块</dt><dd>#" + (proof.height !== undefined ? proof.height : data.post.height) +
+          " · <span class='mono'>" + esc(short(proof.block_hash || "", 40)) + "</span></dd>" +
+        "<dt>Merkle 根</dt><dd class='mono'>" + esc(proof.merkle_root || "—") + "</dd>" +
+        "<dt>存在性证明</dt><dd>" + (proof.valid
+            ? '<span class="badge good"><i>●</i>验证通过</span>（' +
+              (proof.merkle_proof || []).length + " 层路径，交易位于区块第 " +
+              proof.tx_index + " 位 / 共 " + proof.tx_count + " 笔）"
+            : '<span class="badge muted">—</span>') + "</dd>" +
+        "<dt>点赞名单</dt><dd>" + (data.liked_by.length
+            ? data.liked_by.map(a => "<div class='mono'>" + esc(a) + "</div>").join("")
+            : "还没有人赞过") + "</dd>" +
+      "</dl>" +
+      (data.replies.length
+        ? '<div style="margin-top:10px"><b style="font-size:13px">全部回复（' +
+          data.replies.length + '）</b>' +
+          data.replies.map(r =>
+            '<div class="reply-item"><span class="mono muted">' + esc(short(r.author, 14)) +
+            '</span>：' + esc(r.text) +
+            ' <span class="muted" style="font-size:11px">#' + r.height + " · " +
+            fmtTime(r.time).slice(5, 16) + "</span></div>").join("") + "</div>"
+        : "");
+  } catch (error) {
+    box.innerHTML = '<div class="empty">' + esc(error.message) + "</div>";
+  }
+}
+
+function bindCommunity() {
+  const text = document.getElementById("postText");
+  text.addEventListener("input", () => {
+    document.getElementById("postCount").value = text.value.length + " / 2000";
+  });
+
+  const image = document.getElementById("postImage");
+  image.addEventListener("change", () => {
+    const wrap = document.getElementById("postPreviewWrap");
+    if (image.files.length) {
+      document.getElementById("postPreview").src = URL.createObjectURL(image.files[0]);
+      wrap.style.display = "block";
+    } else {
+      wrap.style.display = "none";
+    }
+  });
+
+  document.getElementById("btnPublish").addEventListener("click", function () {
+    const content = text.value.trim();
+    if (!content) { toast("正文不能为空——空交易上不了链", "error"); return; }
+    const body = sessionBody({
+      text: content,
+      topic: document.getElementById("postTopic").value.trim(),
+    });
+    if (!body) return;
+    const button = this;
+    const finish = async () => {
+      const data = await api("/api/post", { method: "POST", body: body });
+      text.value = "";
+      document.getElementById("postTopic").value = "";
+      document.getElementById("postCount").value = "0 / 2000";
+      image.value = "";
+      document.getElementById("postPreviewWrap").style.display = "none";
+      toast("<h4>帖子已写入区块链</h4>编号 " + esc(data.post_id) + " · 区块 #" + data.height +
+        '<br><span class="mono">' + esc(short(data.txid, 34)) + '</span>' +
+        "<br>从今往后，任何人都无法悄悄删改这段话。", "ok");
+      buzz();
+      questDone("post");
+      loadPosts(true);   // 刷新 feed 并把新帖滚入视野、闪一圈主题色
+      refresh();
+    };
+    if (image.files.length) {
+      withBusy(button, "上传附图…", async () => {
+        body.content_base64 = await fileToBase64(image.files[0]);
+        body.filename = image.files[0].name;
+      }).then(() => withBusy(button, "签名上链…", finish))
+        .catch(error => toast("<h4>发布失败</h4>" + esc(error.message), "error"));
+    } else {
+      withBusy(button, "签名上链…", finish)
+        .catch(error => toast("<h4>发布失败</h4>" + esc(error.message), "error"));
+    }
+  });
+
+  document.getElementById("btnReloadFeed").addEventListener("click", loadPosts);
+  document.getElementById("feedFilterChip").addEventListener("click", () => {
+    state.feedFilter = null;
+    loadPosts();
+  });
+
+  // 下拉刷新：只在触屏设备启用（桌面有「刷新」按钮）。手势与原生一致：
+  // 页面在顶部时下拉出现指示条，超过阈值松手即重新拉取。
+  if (window.matchMedia("(pointer: coarse)").matches) {
+    const feed = document.getElementById("feed");
+    const ptr = document.getElementById("ptr");
+    let startY = null;
+    let pull = 0;
+    feed.addEventListener("touchstart", event => {
+      if (window.scrollY <= 2) startY = event.touches[0].clientY;
+    }, { passive: true });
+    feed.addEventListener("touchmove", event => {
+      if (startY === null) return;
+      const dy = event.touches[0].clientY - startY;
+      if (dy <= 0 || window.scrollY > 0) { ptr.style.height = "0px"; return; }
+      pull = Math.min(64, dy * 0.45);
+      ptr.style.height = pull + "px";
+      ptr.querySelector(".spinner").style.display = pull >= 52 ? "" : "none";
+    }, { passive: true });
+    feed.addEventListener("touchend", () => {
+      if (startY === null) return;
+      startY = null;
+      const refresh = pull >= 52;
+      pull = 0;
+      ptr.style.height = "0px";
+      ptr.querySelector(".spinner").style.display = "none";
+      if (refresh) loadPosts();
+    }, { passive: true });
+  }
+}
+
+/* ------------------------------------------------------------ 平台积分 */
+function ptsKindBadge(type) {
+  if (type === "MINT") return '<span class="badge good"><i>▲</i>铸造</span>';
+  if (type === "BURN") return '<span class="badge critical"><i>▼</i>销毁</span>';
+  return '<span class="badge"><i>◆</i>转账</span>';
+}
+
+async function loadPoints() {
+  loadPurchaseSection();
+  const session = state.session;
+  const params = new URLSearchParams({ top: "8" });
+  if (session) params.set("address", session.address);
+  try {
+    const data = await api("/api/points?" + params.toString());
+    document.getElementById("ptsWho").textContent = session
+      ? session.name + "（" + session.short_address + "）" : "尚未登录";
+    document.getElementById("ptsBalance").textContent = data.balance_text || "0";
+    document.getElementById("payWho").textContent = session
+      ? session.name + "（" + session.short_address + "）" : "—";
+    const cap = data.max_supply_text
+      ? '<b>上限 ' + esc(data.max_supply_text) + '</b> · ' : "";
+    document.getElementById("ptsSupply").innerHTML =
+      "链上流通 <b>" + esc(data.supply_text) + "</b> · " + cap +
+      "持币 <b>" + data.holders + "</b> 个地址" +
+      (data.operator ? " · 运营方 <b>" + esc(data.operator) + "</b>" : "");
+
+    // 运营方提示与面板
+    const note = document.getElementById("ptsOperatorNote");
+    const admin = document.getElementById("ptsAdminCard");
+    const isOperator = data.operator_address && session &&
+      session.address === data.operator_address;
+    if (!data.operator_address) {
+      note.style.display = "block";
+      note.innerHTML = "<b>兼容模式</b>：本链创世区块未登记运营方地址，任何地址均可铸造积分。" +
+        "仅适合演示；生产环境请重建链并设置运营方地址（init --operator-address）。";
+      admin.style.display = "block";
+    } else if (isOperator) {
+      note.style.display = "none";
+      admin.style.display = "block";
+    } else {
+      note.style.display = "block";
+      note.innerHTML = "积分发行由运营方 <span class='mono'>" + esc(data.operator_address) +
+        "</span> 控制，普通地址只能转账。";
+      admin.style.display = "none";
+    }
+
+    // 流水
+    const log = document.getElementById("ptsLog");
+    document.getElementById("ptsLogTotal").textContent = data.recent.length
+      ? "共 " + data.recent_total + " 条 · 显示最近 " + data.recent.length + " 条" : "";
+    if (!data.recent.length) {
+      log.innerHTML = '<div class="empty"><div class="empty-art"></div>' +
+        "还没有积分流水——铸造第一批积分，或等待第一笔转账</div>";
+      return;
+    }
+    const mine = session && session.address;
+    log.innerHTML =
+      '<table><thead><tr><th>类型</th><th>对方</th><th>金额</th><th>时间</th><th>区块</th></tr></thead><tbody>' +
+      data.recent.map(e => {
+        const dir = e.type === "PAY"
+          ? (e.from === mine
+              ? '<span class="pts-dir-out">−</span>'
+              : '<span class="pts-dir-in">＋</span>')
+          : (e.type === "MINT" ? '<span class="pts-dir-in">＋</span>'
+                               : '<span class="pts-dir-out">−</span>');
+        const peer = e.type === "PAY"
+          ? (e.from === mine ? e.to : e.from)
+          : (e.type === "MINT" ? e.to : e.from);
+        return "<tr><td>" + ptsKindBadge(e.type) + "</td>" +
+          '<td class="mono">' + esc(short(peer || "—", 22)) + "</td>" +
+          '<td class="num">' + dir + " " + esc(e.amount_text) + "</td>" +
+          '<td class="sec">' + fmtTime(e.time) + "</td>" +
+          '<td class="num">#' + e.height + "</td></tr>";
+      }).join("") + "</tbody></table>";
+    // 余额排行（匿名前 8）
+    if (data.top && data.top.length) {
+      document.getElementById("ptsLogTotal").textContent +=
+        " · 大户 " + data.top.map(t => esc(t.balance_text)).join(" / ");
+    }
+  } catch (error) {
+    toast("<h4>读取积分失败</h4>" + esc(error.message), "error");
+  }
+}
+
+function runPointsAction(button, path, amountValue, memoValue) {
+  const body = sessionBody({
+    to: document.getElementById("payTo").value.trim(),
+    amount: amountValue.trim(),
+    memo: memoValue.trim(),
+  });
+  if (!body) return;
+  if (!body.amount) { toast("请填写金额", "error"); return; }
+  if (path === "/api/pay" && !body.to) { toast("请填写收款方地址", "error"); return; }
+  withBusy(button, "签名上链…", async () => {
+    try {
+      const data = await api(path, { method: "POST", body: body });
+      buzz();
+      toast("<h4>上链成功</h4>" + esc(data.message || "") +
+            "，金额 <b>" + esc(data.amount_text) + "</b> · 区块 #" + data.height +
+            '<br><span class="mono">' + esc(short(data.txid, 34)) + "</span>", "ok");
+      if (path === "/api/pay") document.getElementById("payTo").value = "";
+      document.getElementById(path === "/api/mint" ? "mintAmount" : path === "/api/burn" ? "burnAmount" : "payAmount").value = "";
+      loadPoints();
+      refresh();
+    } catch (error) {
+      toast("<h4>上链失败</h4>" + esc(error.message), "error");
+    }
+  });
+}
+
+function bindPoints() {
+  document.getElementById("btnPtsRefresh").addEventListener("click", loadPoints);
+  document.getElementById("btnPay").addEventListener("click", function () {
+    runPointsAction(this, "/api/pay",
+      document.getElementById("payAmount").value,
+      document.getElementById("payMemo").value);
+  });
+  document.getElementById("btnMint").addEventListener("click", function () {
+    runPointsAction(this, "/api/mint",
+      document.getElementById("mintAmount").value,
+      document.getElementById("mintMemo").value);
+  });
+  document.getElementById("btnBurn").addEventListener("click", function () {
+    runPointsAction(this, "/api/burn",
+      document.getElementById("burnAmount").value,
+      document.getElementById("burnMemo").value);
+  });
+  document.getElementById("btnBuy").addEventListener("click", submitBuyOrder);
+  ["buyAmount", "buyAddress"].forEach(id => {
+    document.getElementById(id).addEventListener("input", updateBuyPreview);
+  });
+}
+
+let purchaseState = { rails: [], selected: null, region: "CN", order: null,
+                      pollHandle: null };
+
+async function loadPurchaseSection() {
+  try {
+    const data = await api("/api/purchase/methods");
+    purchaseState.region = data.region;
+    purchaseState.rails = data.rails || [];
+    purchaseState.selected = (purchaseState.rails.find(r => r.available) || {}).id || null;
+    renderRegionBanner(data);
+    renderRailCards();
+    if (state.session) {
+      document.getElementById("buyAddress").value = state.session.address || "";
+    }
+    updateBuyPreview();
+    await loadMyOrders();
+  } catch (error) {
+    document.getElementById("ptsRegionBanner").innerHTML =
+      "<b>无法获取支付通道：</b>" + esc(error.message);
+  }
+}
+
+function renderRegionBanner(data) {
+  const banner = document.getElementById("ptsRegionBanner");
+  const tag = document.getElementById("ptsRegionTag");
+  const cls = data.region === "CN" ? "cn" : "open";
+  banner.className = "region-banner " + cls;
+  if (data.region === "CN") {
+    banner.innerHTML = "📍 当前地区：<b>" + esc(data.region_label) +
+      "</b>。依 924 通知要求，<b>加密货币支付通道（USDT / ETH）未面向中国大陆地区开放</b>，" +
+      "微信支付通道仍可正常使用。";
+  } else {
+    banner.innerHTML = "📍 当前地区：<b>" + esc(data.region_label) +
+      "</b>。所有支付通道（微信支付 / USDT / ETH）均可使用。";
+  }
+  tag.textContent = (data.ip || "?") + " · " + data.region;
+}
+
+function renderRailCards() {
+  const wrap = document.getElementById("ptsRails");
+  wrap.innerHTML = purchaseState.rails.map(rail => {
+    const stateCls = rail.available ? (rail.id === purchaseState.selected ? " sel" : "")
+                                    : "locked";
+    const lockBadge = rail.available ? "" : '<span class="lock">🔒 未开放</span>';
+    return '<div class="rail-card ' + stateCls + '" data-id="' + rail.id + '">' +
+      lockBadge +
+      '<div class="name">' + esc(rail.label) + "</div>" +
+      '<div class="price">1 ' + esc(rail.currency) + " = " + rail.points_per_unit +
+      " 积分" + (rail.crypto ? " · 加密" : " · 法币") + "</div></div>";
+  }).join("");
+  wrap.querySelectorAll(".rail-card").forEach(card => {
+    card.addEventListener("click", () => {
+      const id = card.dataset.id;
+      const rail = purchaseState.rails.find(r => r.id === id);
+      if (!rail || !rail.available) return;
+      purchaseState.selected = id;
+      renderRailCards();
+      updateBuyPreview();
+    });
+  });
+}
+
+function updateBuyPreview() {
+  const preview = document.getElementById("buyPreview");
+  const note = document.getElementById("buyRail");
+  const rail = purchaseState.rails.find(r => r.id === purchaseState.selected);
+  if (!rail) {
+    preview.textContent = "—（无可用通道）";
+    note.textContent = "未选择通道";
+    return;
+  }
+  note.innerHTML = "当前通道：<b>" + esc(rail.label) + "（" + esc(rail.currency) +
+    "）" + (rail.available ? "" : " · 已锁定");
+  const amountStr = document.getElementById("buyAmount").value.trim();
+  const num = parseFloat(amountStr);
+  if (!amountStr || !isFinite(num) || num <= 0) {
+    preview.textContent = "—（输入购买数量后预估）";
+    return;
+  }
+  const units = Math.round(num * 100000000);
+  const ppu = rail.points_per_unit;
+  const value = (units / 100000000 / ppu).toFixed(rail.id === "eth" ? 6 : 2);
+  preview.textContent = value + " " + rail.currency;
+}
+
+async function submitBuyOrder() {
+  const btn = document.getElementById("btnBuy");
+  const rail = purchaseState.rails.find(r => r.id === purchaseState.selected);
+  const amountStr = (document.getElementById("buyAmount").value || "").trim();
+  const address = (document.getElementById("buyAddress").value || "").trim();
+  const out = document.getElementById("buyOrder");
+  out.innerHTML = "";
+  if (!rail || !rail.available) {
+    out.innerHTML = '<div class="callout">该通道在你所在地区未开放</div>'; return; }
+  if (!amountStr || !isFinite(parseFloat(amountStr)) || parseFloat(amountStr) <= 0) {
+    out.innerHTML = '<div class="callout">请输入正确的购买数量</div>'; return; }
+  if (!address) {
+    out.innerHTML = '<div class="callout">请填写接收积分的钱包地址</div>'; return; }
+  withBusy(btn, "下单中…", async () => {
+    try {
+      const data = await api("/api/purchase/order", { method: "POST",
+        body: { address: address, rail: rail.id, points: amountStr } });
+      purchaseState.order = data.order;
+      renderOrder(data.order);
+      startOrderPoll(data.order.id);
+      loadMyOrders();
+    } catch (error) {
+      out.innerHTML = '<div class="callout">' + esc(error.message) + "</div>";
+    }
+  });
+}
+
+function renderOrder(order) {
+  const out = document.getElementById("buyOrder");
+  out.innerHTML = '<div class="order-instr">' +
+    '订单 <span class="oid">' + esc(order.id) + "</span> 已生成。" +
+    '<span class="order-status-chip ' + order.status + '">' +
+    esc(order.status) + "</span><br>" + esc(order.instructions) +
+    (order.expires_at ? "<br><br>有效期至：" +
+      new Date(order.expires_at * 1000).toLocaleString() : "") +
+    "</div>";
+}
+
+function startOrderPoll(orderId) {
+  if (purchaseState.pollHandle) clearInterval(purchaseState.pollHandle);
+  purchaseState.pollHandle = setInterval(async () => {
+    try {
+      const data = await api("/api/purchase/orders");
+      const orders = data.orders || [];
+      const fresh = orders.find(o => o.id === orderId);
+      if (!fresh) return;
+      if (fresh.status !== purchaseState.order.status ||
+          fresh.delivered_at !== purchaseState.order.delivered_at) {
+        purchaseState.order = fresh;
+        renderOrder(fresh);
+        loadMyOrders();
+      }
+      if (fresh.status !== "pending") {
+        clearInterval(purchaseState.pollHandle);
+        purchaseState.pollHandle = null;
+      }
+    } catch (error) { /* 静默重试 */ }
+  }, 3000);
+}
+
+async function loadMyOrders() {
+  const wrap = document.getElementById("ptsMyOrders");
+  const address = state.session && state.session.address;
+  if (!address) { wrap.innerHTML = '<div class="empty">请先解锁钱包</div>'; return; }
+  try {
+    const data = await api("/api/purchase/orders?address=" +
+                            encodeURIComponent(address));
+    const orders = data.orders || [];
+    if (!orders.length) { wrap.innerHTML = '<div class="empty">暂无订单</div>'; return; }
+    wrap.innerHTML = orders.slice(0, 10).map(o =>
+      '<div class="op-row" style="display:flex;justify-content:space-between;' +
+      'padding:8px 0;border-bottom:1px solid var(--grid);font-size:12.5px">' +
+      '<span><span class="oid">' + esc(o.id) + "</span> " +
+      '<span class="order-status-chip ' + o.status + '">' + esc(o.status) +
+      "</span> " + esc(o.rail) + " " + esc(o.amount_text) + " " + esc(o.currency) +
+      "</span>" +
+      '<span class="muted">' + new Date(o.created_at * 1000).toLocaleString() +
+      "</span></div>").join("");
+  } catch (error) {
+    wrap.innerHTML = '<div class="empty">订单读取失败：' + esc(error.message) + "</div>";
+  }
+}
+
+/* ------------------------------------------------------------ 我的 */
+async function renderMe() {
+  const box = document.getElementById("meIdentity");
+  if (!state.session) { box.innerHTML = '<div class="empty">尚未登录</div>'; return; }
+  // 足迹实时重算：用内存里的口令重放一次 /api/login（服务端永远现算，不存会话）
+  try {
+    state.session = await api("/api/login", { method: "POST",
+      body: { wallet: state.session.name,
+              password: state.secret[state.session.name] || null } });
+  } catch (error) { /* 链状态变化等，沿用旧数据 */ }
+  const s = state.session;
+  const fp = s.footprint || {};
+  const cell = (v, l) => '<div class="foot-item"><div class="v num">' + (v || 0) +
+    '</div><div class="l">' + l + "</div></div>";
+  box.innerHTML =
+    '<div class="me-head">' +
+      '<span class="avatar" style="' + avatarStyle(s.address) + '"></span>' +
+      '<div><h2 style="margin:0">' + esc(s.name) + " " +
+        (s.encrypted ? '<span class="badge good"><i>●</i>口令加密</span>'
+                     : '<span class="badge critical"><i>■</i>未加密</span>') + '</h2>' +
+      '<div class="mono muted me-addr" title="点击复制地址" onclick="copyAddress()">' +
+        esc(s.address) + "</div></div>" +
+    "</div>" +
+    '<div class="foot-grid">' +
+      cell(fp.works_owned, "名下作品") + cell(fp.works_created, "我登记的") +
+      cell(fp.posts, "我的发帖") + cell(fp.tx_count, "发出的交易") +
+    "</div>" +
+    '<dl class="kv" style="margin-top:16px">' +
+      "<dt>公钥</dt><dd class='mono'>" + esc(s.pubkey) + "</dd>" +
+      "<dt>钱包创建时间</dt><dd>" + fmtTime(s.created_at) + "</dd>" +
+      "<dt>我发出的赞</dt><dd class='num'>" + (fp.likes_given || 0) +
+        ' <span class="muted">（链上的赞无法撤回）</span></dd>' +
+    "</dl>" +
+    '<div class="actions">' +
+      '<button class="btn ghost" onclick="questShow()">重看新手任务</button>' +
+      '<button class="btn ghost" onclick="feedOnlyMine()">只看我的帖子</button>' +
+    "</div>";
+}
+
+function feedOnlyMine() {
+  if (!state.session) return;
+  state.feedFilter = state.session.address;
+  switchTab("community");
+}
+
+function copyAddress() {
+  if (!state.session) return;
+  const text = state.session.address;
+  const done = () => toast("地址已复制：" + esc(short(text, 24)), "ok");
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(() => prompt("手动复制地址：", text));
+  } else {
+    prompt("手动复制地址：", text);
+  }
+}
+
+/* ------------------------------------------------------------ 新手任务
+ * 终端 boot-sequence 风格的任务清单。完成检测是纯前端的：
+ * 各动作的成功回调里调 questDone(id)。进度按钱包名分桶存 localStorage，
+ * 换一个钱包登录就是一份新的入伍测试。 */
+const QUESTS = [
+  ["login",    "unlock wallet · 解锁钱包，获得链上身份"],
+  ["register", "register work · 登记第一件作品上链"],
+  ["cert",     "open cert · 打开一次链上确权证书"],
+  ["compare",  "compare · 跑一次感知指纹侵权比对"],
+  ["post",     "post · 发布第一条上链帖子"],
+  ["like",     "like · 给帖子点个赞（上链不可撤回）"],
+];
+function questKey() {
+  return "artchain-quests-" + (state.session ? state.session.name : "anon");
+}
+function questLoad() {
+  try {
+    state.quests = new Set(JSON.parse(localStorage.getItem(questKey()) || "[]"));
+  } catch (e) { state.quests = new Set(); }
+}
+function questSave() {
+  try { localStorage.setItem(questKey(), JSON.stringify(Array.from(state.quests))); }
+  catch (e) { /* 隐私模式忽略 */ }
+}
+function questRender(flashId) {
+  const done = state.quests ? state.quests.size : 0;
+  document.getElementById("questBarFill").style.width =
+    Math.round(done / QUESTS.length * 100) + "%";
+  document.getElementById("questLines").innerHTML = QUESTS.map(([id, label]) => {
+    const ok = state.quests && state.quests.has(id);
+    return '<div class="quest-line' + (ok ? " done" : "") +
+      (id === flashId ? " flash" : "") + '">' +
+      '<span class="tag">' + (ok ? "[OK]" : "[..]") + "</span><span>" + esc(label) + "</span></div>";
+  }).join("");
+  document.getElementById("quest").classList.toggle("done", done >= QUESTS.length);
+}
+function questDone(id) {
+  if (!state.session || !state.quests || state.quests.has(id)) return;
+  state.quests.add(id);
+  questSave();
+  questRender(id);
+  if (state.quests.size >= QUESTS.length) {
+    setTimeout(() => toast(
+      "<h4>★ 你已是合格的链上公民</h4>六项入伍测试全部 [OK]——" +
+      "你的身份、作品、发言与赞，全部写进了区块链，任何人都无法悄悄抹去。", "ok"), 600);
+  }
+}
+function questInit() {
+  questLoad();
+  const card = document.getElementById("quest");
+  const skipped = localStorage.getItem(questKey() + "-skip") === "1";
+  card.classList.remove("done");
+  questRender();
+  const allDone = state.quests.size >= QUESTS.length;
+  card.classList.toggle("on", allDone || !skipped);
+  questDone("login");   // 能进到这里说明已解锁钱包
+}
+function questShow() {
+  try { localStorage.removeItem(questKey() + "-skip"); } catch (e) { /* 忽略 */ }
+  document.getElementById("quest").classList.add("on");
+  questRender();
+}
+function bindQuest() {
+  document.getElementById("questSkip").addEventListener("click", () => {
+    try { localStorage.setItem(questKey() + "-skip", "1"); } catch (e) { /* 忽略 */ }
+    document.getElementById("quest").classList.remove("on");
+  });
+  document.getElementById("questBadge").addEventListener("click", questShow);
+}
+
+/* ------------------------------------------------------------ 主题切换 */
+(function initTheme() {
+  const root = document.documentElement;
+  // 默认是浅色（苹果风），只有用户主动切过才读回记录。
+  const saved = localStorage.getItem("artchain-theme");
+  if (saved) root.dataset.theme = saved;
+  const button = document.getElementById("btnTheme");
+  const metaTheme = document.getElementById("metaThemeColor");
+  const sync = () => {
+    const isDark = root.dataset.theme === "dark";
+    button.textContent = isDark ? "浅色" : "深色";
+    if (metaTheme) metaTheme.setAttribute("content", isDark ? "#000000" : "#f5f5f7");
+  };
+  sync();
+  button.addEventListener("click", () => {
+    const next = root.dataset.theme === "dark" ? "light" : "dark";
+    root.dataset.theme = next;
+    try { localStorage.setItem("artchain-theme", next); } catch (e) { /* 隐私模式下忽略 */ }
+    sync();
+  });
+})();
+
+/* ------------------------------------------------------------ 启动
+ * 支付宝式启动顺序：登录门是第一屏，解锁成功后才加载主界面数据。
+ * 链未初始化也先登录——初始化面板就在概览页里，登录后才看得到。 */
+(function boot() {
+  const select = document.getElementById("regCategory");
+  select.innerHTML = CATEGORIES.map(c => "<option>" + c + "</option>").join("");
+  bindFilePreview("regFile", "regFilebox", "regFilepreview", "regFilename", "regFilesize");
+  bindFilePreview("cmpFile", "cmpFilebox", "cmpFilepreview", "cmpFilename", "cmpFilesize");
+  // 贴心细节：没填标题时，选好文件自动把文件名（去扩展名）填进作品名称
+  document.getElementById("regFile").addEventListener("change", () => {
+    const title = document.getElementById("regTitle");
+    const file = document.getElementById("regFile").files[0];
+    if (file && !title.value.trim()) {
+      title.value = file.name.replace(/\.[^.]+$/, "");
+    }
+  });
+  window.addEventListener("resize", () => { if (state.status) renderChart(); });
+  bindGate();
+  bindCommunity();
+  bindQuest();
+  bindPoints();
+  buildMnemonicGrid("unlockWords");   // 解锁页：12 个助记词输入框
+  buildMnemonicGrid("importWords");   // 导入页：12 个助记词输入框
+  // 开场：品牌 splash 先播约 1.2s，再进场登录门（系统减弱动态时直接进场）。
+  // splash 自身有纯 CSS 的自动收场，这里即使延时失败也不会把页面挡死。
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  setTimeout(() => {
+    // 开始界面默认停在「解锁钱包」→「助记词解锁」：第一屏就是登录界面，
+    // 12 个助记词输入框直接可见，粘贴整句自动分发到各格。
+    showGate("login");
+    setUnlockMode("mn");
+  }, reducedMotion ? 0 : 1200);
+})();
+
+/* PWA：注册 Service Worker（失败静默——不支持 SW 的环境照常使用） */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+  });
+}
+</script>
+</body>
+</html>

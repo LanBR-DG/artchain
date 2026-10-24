@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "artchain-provenance"
+version = "1.0.0"
+description = "An educational Python ledger for artwork provenance and verifiable records"
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.8"
+authors = [{name = "LanBR-DG"}]
+dependencies = []
+
+[project.optional-dependencies]
+images = ["Pillow>=10"]
+
+[project.scripts]
+artchain = "artchain.cli:main"
+
+[tool.setuptools]
+license-files = ["LICENSE", "licenses/*.txt", "THIRD_PARTY_NOTICES.md"]
+
+[tool.setuptools.packages.find]
+include = ["artchain*"]
+
+[tool.setuptools.package-data]
+artchain = ["crypto/bip39_english.txt", "web/*.html", "web/*.js", "web/*.webmanifest", "web/icons/*.png", "web/legal/*.html", "web/legal/*.css", "web/legal/*.md"]

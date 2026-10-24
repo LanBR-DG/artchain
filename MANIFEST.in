@@ -1,0 +1,6 @@
+include README.md README.zh-CN.md SECURITY.md CONTRIBUTING.md THIRD_PARTY_NOTICES.md
+include LICENSE
+include *.md
+recursive-include licenses *.txt
+recursive-include artchain/web *.html *.css *.js *.webmanifest *.png *.md
+include artchain/crypto/bip39_english.txt
